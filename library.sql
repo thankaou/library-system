@@ -44,7 +44,7 @@ ISBN char(13) not null,
 /*IMAGES*/
 title varchar(100) not null,
 book_language varchar(50),
-abstract varchar(500),
+abstract varchar(2500),
 publisher varchar(50),
 page_nr int unsigned,
 unique(ISBN),
