@@ -10,7 +10,7 @@ city_name varchar(50),
 school_phone_number varchar(30) not null unique,
 school_email varchar(100) not null unique,
 school_principal varchar(100) not null,
-lib_system_admin varchar(100) not null,
+school_admin varchar(100) not null,
 unique (school_name),
 primary key(school_id)
 /*να δουμε αν θελει foreign key*/
@@ -28,7 +28,7 @@ date_of_birth date not null,
 available_loans smallint not null,
 available_reservations smallint not null,
 user_type enum('student', 'teacher', 'admin','school admin') not null,
-user_status enum('active', 'inacrive') default 'active',
+user_status enum('active', 'inactive') default 'active',
 book_loans int default '0',
 /*να ελεγξω τι γινεται κατα την εισαγωγη αν δεν εινια κατι */
 unique(username) ,
@@ -39,7 +39,7 @@ constraint fk_users_school_name foreign key (school_name)
 
 create table if not exists book(
 book_id int not null auto_increment,
-ISBN char(13),
+ISBN char(13) not null,
 /*να μπουν constaraints*/
 /*IMAGES*/
 title varchar(100) not null,
@@ -55,8 +55,7 @@ constraint valid_ISBN check(ISBN regexp '^[0-9]{13}$')
 create table if not exists author(
 author_ID int not null auto_increment,
 ISBN char(13) not null,/*mporei na fygei an meinei to apo katw*/
-first_name varchar(50),
-last_name varchar(50),
+full_name varchar(70),
 /*primary key(author_ID)*/
 primary key(author_ID),
 unique(author_ID,ISBN),
@@ -168,6 +167,7 @@ unique (username) ,
 constraint fk_admin_registration_school_name foreign key (school_name) 
    references school(school_name) on delete restrict on update cascade
 );
+/*constraint check_username check(username not in (select username from users)),DE DOULEUEI AKOMA*/
 create table if not exists school_user_registration(
 user_reg_id int not null auto_increment,
 username varchar(50) not null,
@@ -182,6 +182,9 @@ available_reservations smallint not null,
 user_type enum('student', 'teacher') not null,
 primary key(user_reg_id),
 unique(username) ,
+
 constraint fk_user_registration_school_name foreign key (school_name) 
    references school(school_name) on delete restrict on update cascade
 );
+/*na dw an doulevei to constraint*/
+/*constraint check_username check(username not in (select username from users)), DE DOULEUEI AKOMA*/
