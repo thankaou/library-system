@@ -1,6 +1,6 @@
-drop database if exists library_system;
-create database if not exists library_system;
-use library_system;
+drop database if exists library_system_final;
+create database if not exists library_system_final;
+use library_system_final;
 
 create table if not exists school(
 school_id int not null auto_increment,
@@ -23,7 +23,7 @@ passwrd varchar(50) not null,
 first_name varchar(50) not null,
 last_name varchar(50) not null,
 email varchar(100) not null,
-users_fk_school_id int not null,
+school_id int not null,
 date_of_birth date not null,
 available_loans smallint not null,
 available_reservations smallint not null,
@@ -33,7 +33,7 @@ book_loans int default '0',
 /*να ελεγξω τι γινεται κατα την εισαγωγη αν δεν εινια κατι */
 unique(username) ,
 primary key(user_id),
-constraint fk_users_school_id foreign key (users_fk_school_id) 
+constraint fk_users_school_id foreign key (school_id) 
    references school(school_id) on delete restrict on update cascade
 );
 
@@ -59,12 +59,12 @@ primary key(author_ID)
 );
 
 create table if not exists author_books(
-f_author_ID int not null,
-f_book_id int not null,
-primary key(f_author_ID,f_book_id),
-constraint fk_auth_book_id foreign key (f_book_id) 
+author_ID int not null,
+book_id int not null,
+primary key(author_ID,book_id),
+constraint fk_auth_book_id foreign key (book_id) 
 	references book(book_id) on delete restrict on update cascade,
-constraint fk_author_ID foreign key (f_author_ID) 
+constraint fk_author_ID foreign key (author_ID) 
 	references author(author_ID) on delete restrict on update cascade
 );
 
@@ -75,12 +75,12 @@ primary key(category_ID)
 );
 
 create table if not exists category_books(
-inter_category_ID int ,
-inter_book_id int ,
-primary key(inter_category_ID,inter_book_id),
-constraint fk_cat_book_id foreign key (inter_book_id) 
+category_ID int ,
+book_id int ,
+primary key(category_ID,book_id),
+constraint fk_cat_book_id foreign key (book_id) 
 	references book(book_id) on delete restrict on update cascade,
-constraint fk_category_ID foreign key (inter_category_ID) 
+constraint fk_category_ID foreign key (category_ID) 
 	references category(category_ID) on delete restrict on update cascade
 );
 
@@ -91,12 +91,12 @@ primary key(keyword_ID)
 );
 
 create table if not exists keyword_books(
-inter_keyword_ID int ,
-kwrd_book_id int ,
-primary key(inter_keyword_ID,kwrd_book_id),
-constraint fk_kwrd_book_id foreign key (kwrd_book_id) 
+keyword_ID int ,
+book_id int ,
+primary key(keyword_ID,book_id),
+constraint fk_kwrd_book_id foreign key (book_id) 
 	references book(book_id) on delete restrict on update cascade,
-constraint fk_keyword_ID foreign key (inter_keyword_ID) 
+constraint fk_keyword_ID foreign key (keyword_ID) 
 	references keyword(keyword_ID) on delete restrict on update cascade
 );
 
@@ -128,7 +128,7 @@ primary key(reservation_ID),
 constraint fk_reservation_users foreign key (user_id) 
 	references users(user_id) on delete restrict on update cascade,
 constraint fk_reservation_school_library  foreign key (school_id,book_id) 
-	references school_library(school_id ,book_id) on delete restrict on update cascade
+	references school_library(school_id,book_id) on delete restrict on update cascade
 /*να δω αν θελει και τελους-by default*/
 /*να ρωτησω για το foreign key στο αλλο που εχει 2 για primary key*/
 /*ελεγχος ημερομηνιας παραλαβης <ημερομηνια παραδοσης */
@@ -162,7 +162,7 @@ rating enum('1','2','3','4','5') not null,
 review varchar(280),
 primary key(review_id),
 unique(book_id,user_id,loan_ID),
-constraint fk_book_review_loan foreign key (loan_id) 
+constraint fk_book_review_loan foreign key (loan_ID) 
 	references book_loan(loan_id) on delete restrict on update cascade,
 constraint fk_book_review_book foreign key (book_id) 
 	references book(book_id) on delete restrict on update cascade,
