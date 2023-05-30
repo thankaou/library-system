@@ -11,6 +11,7 @@ school_phone_number varchar(30) not null unique,
 school_email varchar(100) not null unique,
 school_principal varchar(100) not null,
 school_admin varchar(100) not null,
+loan_underway enum('0','1') default '0',
 unique (school_name),
 primary key(school_id)
 /*να δουμε αν θελει foreign key*/
@@ -30,11 +31,12 @@ available_reservations smallint not null,
 user_type enum('student', 'teacher', 'admin','school admin') not null,
 user_status enum('active', 'inactive') default 'active',
 book_loans int default '0',
+book_reservations int default '0',
 /*να ελεγξω τι γινεται κατα την εισαγωγη αν δεν εινια κατι */
 unique(username) ,
 primary key(user_id),
 constraint fk_users_school_id foreign key (school_id) 
-   references school(school_id) on delete restrict on update cascade
+   references school(school_id) on delete cascade on update cascade
 );
 
 create table if not exists book(
@@ -63,9 +65,9 @@ author_ID int not null,
 book_id int not null,
 primary key(author_ID,book_id),
 constraint fk_auth_book_id foreign key (book_id) 
-	references book(book_id) on delete restrict on update cascade,
+	references book(book_id) on delete cascade on update cascade,
 constraint fk_author_ID foreign key (author_ID) 
-	references author(author_ID) on delete restrict on update cascade
+	references author(author_ID) on delete cascade on update cascade
 );
 
 create table if not exists category(
@@ -81,7 +83,7 @@ primary key(category_ID,book_id),
 constraint fk_cat_book_id foreign key (book_id) 
 	references book(book_id) on delete restrict on update cascade,
 constraint fk_category_ID foreign key (category_ID) 
-	references category(category_ID) on delete restrict on update cascade
+	references category(category_ID) on delete cascade on update cascade
 );
 
 create table if not exists keyword(
@@ -95,9 +97,9 @@ keyword_ID int ,
 book_id int ,
 primary key(keyword_ID,book_id),
 constraint fk_kwrd_book_id foreign key (book_id) 
-	references book(book_id) on delete restrict on update cascade,
+	references book(book_id) on delete cascade on update cascade,
 constraint fk_keyword_ID foreign key (keyword_ID) 
-	references keyword(keyword_ID) on delete restrict on update cascade
+	references keyword(keyword_ID) on delete cascade on update cascade
 );
 
 
@@ -106,13 +108,15 @@ school_lib_id int not null auto_increment,
 school_id int not null,
 book_id int not null,
 number_of_copies int unsigned default 0,
+number_of_reservations int unsigned default 0,
 /*να δω αν εχει νοημα ως αρνητικο*/
 primary key(school_lib_id),
 unique(school_id,book_id),
+constraint copies_not_negative check(number_of_copies >= 0),
 constraint fk_school_library_book foreign key (book_id) 
-	references book(book_id) on delete restrict on update cascade ,
+	references book(book_id) on delete cascade on update cascade ,
 constraint fk_school_school_id foreign key (school_id) 
-	references school(school_id) on delete restrict on update cascade
+	references school(school_id) on delete cascade on update cascade
 );
 /*to school name na ginei int!!!*/
 
@@ -124,11 +128,12 @@ school_id int not null,
 user_id int not null,
 reservation_date date not null,
 end_of_reservation_date date not null,
+status enum('active', 'inactive') default 'inactive',
 primary key(reservation_ID),
 constraint fk_reservation_users foreign key (user_id) 
-	references users(user_id) on delete restrict on update cascade,
+	references users(user_id) on delete cascade on update cascade,
 constraint fk_reservation_school_library  foreign key (school_id,book_id) 
-	references school_library(school_id,book_id) on delete restrict on update cascade
+	references school_library(school_id,book_id) on delete cascade on update cascade
 /*να δω αν θελει και τελους-by default*/
 /*να ρωτησω για το foreign key στο αλλο που εχει 2 για primary key*/
 /*ελεγχος ημερομηνιας παραλαβης <ημερομηνια παραδοσης */
@@ -143,11 +148,12 @@ school_id int not null,
 user_id int not null,
 starting_date date not null,
 end_date date not null,
+loan_status enum('in_progress','completed','overdue') default 'in_progress',
 primary key(loan_ID),
 constraint fk_book_loan_users foreign key (user_id) 
-	references users(user_id) on delete restrict on update cascade,
+	references users(user_id) on delete cascade on update cascade,
 constraint fk_book_loan_school_library foreign key (school_id ,book_id) 
-	references school_library(school_id,book_id ) on delete restrict on update cascade
+	references school_library(school_id,book_id ) on delete cascade on update cascade
 /*να δω αν θελει και τελους-by default*/
 /*να ρωτησω για το foreign key στο αλλο που εχει 2 για primary key*/
 /*ελεγχος ημερομηνιας παραλαβης <ημερομηνια παραδοσης */
@@ -163,11 +169,11 @@ review varchar(280),
 primary key(review_id),
 unique(book_id,user_id,loan_ID),
 constraint fk_book_review_loan foreign key (loan_ID) 
-	references book_loan(loan_id) on delete restrict on update cascade,
+	references book_loan(loan_id) on delete cascade on update cascade,
 constraint fk_book_review_book foreign key (book_id) 
-	references book(book_id) on delete restrict on update cascade,
+	references book(book_id) on delete cascade on update cascade,
 constraint fk_book_review_users foreign key (user_id) 
-	references users(user_id) on delete restrict on update cascade
+	references users(user_id) on delete cascade on update cascade
 );
 /*isws polla h na ginetai overwrite na dw an to update kanei insert*/
 create table if not exists school_admin_registration(
@@ -185,7 +191,7 @@ available_reservations smallint not null,
 primary key(admin_reg_id),
 unique (username) ,
 constraint fk_admin_registration_school foreign key (school_id) 
-   references school(school_id) on delete restrict on update cascade
+   references school(school_id) on delete cascade on update cascade
 );
 /*na ελεγξω οτι ολα τα πεδια ειναι πανομοιοτυπα με το users*/
 /*constraint check_username check(username not in (select username from users)),DE DOULEUEI AKOMA*/
@@ -204,7 +210,7 @@ user_type enum('student', 'teacher') not null,
 primary key(user_reg_id),
 unique(username) ,
 constraint fk_user_registration_school_id  foreign key (school_id) 
-   references school(school_id) on delete restrict on update cascade
+   references school(school_id) on delete cascade on update cascade
 );
 /*na dw an doulevei to constraint*/
 /*constraint check_username check(username not in (select username from users)), DE DOULEUEI AKOMA*/
