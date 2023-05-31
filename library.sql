@@ -11,7 +11,7 @@ school_phone_number varchar(30) not null unique,
 school_email varchar(100) not null unique,
 school_principal varchar(100) not null,
 school_admin varchar(100) not null,
-loan_underway enum('0','1') default '0',
+loan_underway enum('0','1') default '0', /*ΔΕΝ ΧΡΕΙΑΖΕΤΑΙ ΝΑ ΔΙΑΓΡΑΦΕΙ*/
 unique (school_name),
 primary key(school_id)
 /*να δουμε αν θελει foreign key*/
@@ -32,6 +32,7 @@ user_type enum('student', 'teacher', 'admin','school admin') not null,
 user_status enum('active', 'inactive') default 'active',
 book_loans int default '0',
 book_reservations int default '0',
+has_overdue_books enum('yes', 'no') default 'no',
 /*να ελεγξω τι γινεται κατα την εισαγωγη αν δεν εινια κατι */
 unique(username) ,
 primary key(user_id),
@@ -122,13 +123,13 @@ constraint fk_school_school_id foreign key (school_id)
 
 
 create table if not exists reservation(
-reservation_ID int unsigned,
+reservation_ID int unsigned auto_increment,
 book_id int not null,
 school_id int not null,
 user_id int not null,
 reservation_date date not null,
 end_of_reservation_date date not null,
-status enum('active', 'inactive') default 'inactive',
+reservation_status enum('active', 'inactive') default 'inactive',
 primary key(reservation_ID),
 constraint fk_reservation_users foreign key (user_id) 
 	references users(user_id) on delete cascade on update cascade,
@@ -142,7 +143,7 @@ constraint fk_reservation_school_library  foreign key (school_id,book_id)
 
 
 create table if not exists book_loan(
-loan_ID int unsigned,
+loan_ID int unsigned auto_increment,
 book_id int not null,
 school_id int not null,
 user_id int not null,
