@@ -1,0 +1,68 @@
+{% extends "global.html" %}
+
+{% block content %}
+<div class="container">
+    {% include "messages.html" %}
+    <div class="row" id="row">
+        <div class="col-md-12">
+            <div class="card" id="card-container">
+                <div class="card-body" id="card">
+                    <h1>User Registrations</h1>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Password</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Email</th>
+                                <th>School ID</th>
+                                <th>Date of Birth</th>
+                                <th>User Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for registration in registrations %}
+                            <tr>
+                                <td>{{ registration[0]}}</td>
+                                <td>{{ registration[1] }}</td>
+                                <td>{{ registration[2] }}</td>
+                                <td>{{ registration[3] }}</td>
+                                <td>{{ registration[4] }}</td>
+                                <td>{{ registration[5] }}</td>
+                                <td>{{ registration[6] }}</td>
+                                <td>{{ registration[7] }}</td>
+                                <td>{{ registration[10] }}</td>
+                                <td>
+                                    <form method="POST" action="/main/school_admin/registrations">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="user_reg_id" value="{{ registration[0] }}">
+                                        <input type="submit" value="Delete">
+                                    </form>
+                                    <form method="POST" action="/main/school_admin/registrations">
+                                        <input type="hidden" name="action" value="accept">
+                                        <input type="hidden" name="user_reg_id" value="{{ registration[0] }}">
+                                        <input type="hidden" name="username" value="{{ registration[1] }}">
+                                        <input type="hidden" name="passwrd" value="{{ registration[2] }}">
+                                        <input type="hidden" name="first_name" value="{{ registration[3] }}">
+                                        <input type="hidden" name="last_name" value="{{ registration[4] }}">
+                                        <input type="hidden" name="email" value="{{ registration[5] }}">
+                                        <input type="hidden" name="school_id" value="{{ registration[6] }}">
+                                        <input type="hidden" name="date_of_birth" value="{{ registration[7] }}">
+                                        <input type="hidden" name="user_type" value="{{ registration[10] }}">
+                                        <input type="submit" value="Accept">
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
