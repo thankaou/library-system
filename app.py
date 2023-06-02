@@ -108,6 +108,120 @@ def main_admin():
     first_name = session['user'][3]
     return render_template("main_admin.html", first_name=first_name)
 
+@app.route("/main/admin/query_3_1_1", methods=["GET", "POST"])
+def query_3_1_1():
+    # Code for the "Total loans per school" query goes here
+    pass
+
+@app.route("/main/admin/query_3_1_2", methods=["GET", "POST"])
+def query_3_1_2():
+    # Code for the "Book authors and teacher loans per category" query goes here
+    pass
+
+@app.route("/main/admin/query_3_1_3", methods=["GET", "POST"])
+def query_3_1_3():
+    # Code for the "Loans from young teachers" query goes here
+    pass
+
+@app.route("/main/admin/query_3_1_4", methods=["GET", "POST"])
+def query_3_1_4():
+    # Code for the "Authors without a lent book" query goes here
+    try:
+        cursor = connection.cursor()
+        query="""
+            select distinct a.author_ID, a.author_name 
+            from author a 
+            inner join author_books b on a.author_ID = b.author_ID
+            inner join book c on b.book_ID = c.book_ID
+            where c.book_ID not in (select book_id from book_loan)
+            order by a.author_ID asc; 
+
+        """
+        cursor.execute(query)
+        authors_no_loan = cursor.fetchall()
+        connection.commit()
+        cursor.close()
+        return render_template("authors_no_loan.html", authors_no_loan = authors_no_loan)
+    except mysql.connector.Error as error:
+        return f"Database Error: {error}"
+
+@app.route("/main/admin/query_3_1_5", methods=["GET", "POST"])
+def query_3_1_5():
+    # Code for the "School admin pairs with same # of loans made (20+ loans)" query goes here
+        # Code for the "Authors without a lent book" query goes here
+    try:
+        cursor = connection.cursor()
+        query="""
+            select distinct a1.school_admin, a1.loan_count
+            from (
+                select a.school_admin, count(*) as loan_count
+                from school as a
+                inner join book_loan as b on a.school_id = b.school_id
+                where year(b.starting_date) = year(now())
+                group by a.school_admin
+                having loan_count > 20
+            ) as a1
+            inner join (
+                select c.school_admin, count(*) as loan_count
+                from school as c
+                inner join book_loan as d on c.school_id = d.school_id
+                where year(d.starting_date) = year(now())
+                group by c.school_admin
+                having loan_count > 20
+            ) as a2 on a1.loan_count = a2.loan_count;
+
+        """
+        cursor.execute(query)
+        hyperactive_operators = cursor.fetchall()
+        connection.commit()
+        cursor.close()
+        return render_template("hyperactive_operators.html", hyperactive_operators = hyperactive_operators)
+    except mysql.connector.Error as error:
+        return f"Database Error: {error}"
+
+@app.route("/main/admin/query_3_1_6", methods=["GET", "POST"])
+def query_3_1_6():
+    # Code for the "Most popular book category pairs" query goes here
+    pass
+
+@app.route("/main/admin/query_3_1_7", methods=["GET", "POST"])
+def query_3_1_7():
+    try:
+        cursor = connection.cursor()
+        query="""
+            SELECT distinct a.author_name,  a.author_ID
+            FROM author a
+            INNER JOIN author_books b ON a.author_ID = b.author_ID
+            WHERE (
+            SELECT COUNT(*)
+            FROM author_books b2
+            WHERE b2.author_ID = b.author_ID
+            )  <= (
+            SELECT MAX(count)
+            FROM (
+            SELECT COUNT(*) AS count
+            FROM author_books
+            GROUP BY author_ID
+            ) AS subquery
+            ) - 5
+            order by a.author_ID;
+
+
+        """
+        cursor.execute(query)
+        inactive_authors = cursor.fetchall()
+        connection.commit()
+        cursor.close()
+        return render_template("inactive_authors.html", inactive_authors = inactive_authors)
+    except mysql.connector.Error as error:
+        return f"Database Error: {error}"
+    
+
+
+
+    
+
+
 @app.route("/main/admin/school", methods=["GET", "POST"])
 def main_admin_school():
     if 'user' not in session:
