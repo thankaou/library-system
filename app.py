@@ -50,7 +50,7 @@ def login():
                 if user_type in ["student", "teacher"]:
                     # Redirect students and teachers to the same page
                     session['user'] = user  # Store the user in the session
-                    return redirect(url_for("main_students_teachers"))
+                    return redirect(url_for("main_users"))
                 elif user_type in ["school admin"]:
                     # Redirect admins and school admins to another page
                     session['user'] = user  # Store the user in the session
@@ -486,24 +486,70 @@ def main_school_admin_library():
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
 
-
 @app.route("/main/school_admin/queries", methods=["GET", "POST"])
 def main_school_admin_queries():
     return 0
 
-
 @app.route("/main/users")
 def main_users():
+    user_id = session['user'][0]
     first_name = session['user'][3]
     school_id = session['user'][6]
     user_type = session['user'][10]
-    return render_template("main_users.html", first_name=first_name, school_id=school_id, user_type=user_type)
+    return render_template("main_users.html", user_id=user_id, first_name=first_name, school_id=school_id, user_type=user_type)
 
-
-@app.route("/main/users/library")
+@app.route("/main/users/library", methods=["GET", "POST"])
 def main_users_library():
-    return 0;
+    if 'user' not in session:
+        return redirect(url_for("login"))
 
+    user_id = session['user'][0]
+    school_id = session['user'][6]
+
+    if request.method == "POST":
+        action = request.form.get("action")
+
+        if action == "Make Reservation":
+            book_id = request.form.get("book_id")
+
+            try:
+                cursor = connection.cursor()
+                cursor.execute("CALL reserve_book(%s, %s)", (book_id, user_id))
+                connection.commit()
+                cursor.close()
+                flash('Book reserved successfully.', 'success')
+                return redirect(url_for("main_users_library"))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+
+    try:
+        cursor = connection.cursor()
+        # Get the books in the user's school library
+        cursor.execute(
+            "SELECT sl.school_lib_id, sl.book_id, sl.number_of_copies, sl.total_copies, b.title "
+            "FROM school_library AS sl "
+            "JOIN book AS b ON sl.book_id = b.book_id "
+            "WHERE sl.school_id = %s",
+            (school_id,))
+        books = cursor.fetchall()
+
+        # Get the user's loans
+        cursor.execute(
+            "SELECT l.loan_ID, l.book_id, l.starting_date, l.end_date, l.loan_status, b.title "
+            "FROM book_loan AS l "
+            "JOIN book AS b ON l.book_id = b.book_id "
+            "WHERE l.user_id = %s",
+            (user_id,))
+        loans = cursor.fetchall()
+
+        cursor.close()
+        return render_template("main_users_library.html", books=books, loans=loans)
+    except mysql.connector.Error as error:
+        return f"Database Error: {error}"
+
+@app.route("/main/users/library/reviews")
+def main_users_library_reviews():
+    return 0;
 
 @app.route("/main/users/personal_info")
 def main_users_personal_info():
