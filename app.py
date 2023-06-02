@@ -796,10 +796,17 @@ def main_users_library():
 
             try:
                 cursor = connection.cursor()
-                cursor.execute("CALL reserve_book(%s, %s)", (book_id, user_id))
-                connection.commit()
+                cursor.execute("SELECT book_reservations FROM users WHERE user_id = %s", (user_id,))
+                reservations_before = cursor.fetchone()[0]
+                cursor.callproc("reserve_book", (book_id, user_id))
+                cursor.execute("SELECT book_reservations FROM users WHERE user_id = %s", (user_id,))
+                reservations_after = cursor.fetchone()[0]
+                if reservations_after > reservations_before:
+                    connection.commit()
+                    flash('Book reserved successfully.', 'success')
+                else:
+                    flash('No more reservations allowed.', 'danger')
                 cursor.close()
-                flash('Book reserved successfully.', 'success')
                 return redirect(url_for("main_users_library"))
             except mysql.connector.Error as error:
                 return f"Database Error: {error}"
@@ -808,7 +815,7 @@ def main_users_library():
         cursor = connection.cursor()
         # Get the books in the user's school library
         cursor.execute(
-            "SELECT sl.school_lib_id, sl.book_id, sl.number_of_copies, sl.total_copies, b.title "
+            "SELECT sl.school_lib_id, sl.book_id, sl.number_of_copies, b.title "
             "FROM school_library AS sl "
             "JOIN book AS b ON sl.book_id = b.book_id "
             "WHERE sl.school_id = %s",
@@ -824,8 +831,17 @@ def main_users_library():
             (user_id,))
         loans = cursor.fetchall()
 
+        # Get the user's reservations
+        cursor.execute(
+            "SELECT r.reservation_ID, r.book_id, b.title, r.reservation_status "
+            "FROM reservation AS r "
+            "JOIN book AS b ON r.book_id = b.book_id "
+            "WHERE r.user_id = %s",
+            (user_id,))
+        reservations = cursor.fetchall()
+
         cursor.close()
-        return render_template("main_users_library.html", books=books, loans=loans)
+        return render_template("main_users_library.html", books=books, loans=loans, reservations=reservations)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
 
