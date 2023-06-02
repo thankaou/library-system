@@ -1,5 +1,6 @@
 {% extends "global.html" %}
 
+
 {% block content %}
 <div class="container">
     {% include "messages.html" %}
@@ -8,12 +9,63 @@
             <div class="card" id="card-container">
                 <div class="card-body" id="card">
                     <h1>Welcome Admin!</h1>
-                    <a href="{{ url_for('main_admin_school') }}">Edit Schools</a>
-                    <a href="{{ url_for('accept_registration') }}">Registrations</a>
-                    <a href="{{ url_for('main_admin_queries') }}">Queries</a>
+                    <div style="margin-bottom: 10px;">
+                        <a class="btn btn-primary btn-submit-custom" href="{{ url_for('main_admin_school') }}">Edit Schools</a>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <a class="btn btn-primary btn-submit-custom" href="{{ url_for('accept_registration') }}">Registrations</a>
+                    </div>
+                    
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="container">
+    {% include "messages.html" %}
+    <div class="row" id="row">
+        <div class="col-md-12">
+            <div class="card" id="card-container">
+                <div class="card-body" id="card">
+                    <h1>Actions</h1>
+                    <div style="margin-bottom: 10px;">
+                        <a class="btn btn-primary btn-submit-custom" href="{{ url_for('query_3_1_1') }}">Total loans per school</a>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <a class="btn btn-primary btn-submit-custom" href="{{ url_for('query_3_1_2') }}">Book authors and teacher loans per category</a>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <a class="btn btn-primary btn-submit-custom" href="{{ url_for('query_3_1_3') }}">Loans from young teachers</a>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <a class="btn btn-primary btn-submit-custom" href="{{ url_for('query_3_1_4') }}">Authors without a lent book</a>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <a class="btn btn-primary btn-submit-custom" href="{{ url_for('query_3_1_5') }}">School operators with same # of loans made (20+ loans) this year</a>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <a class="btn btn-primary btn-submit-custom" href="{{ url_for('query_3_1_6') }}">Most popular book category pairs</a>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <a class="btn btn-primary btn-submit-custom" href="{{ url_for('query_3_1_7') }}">Less active authors</a>
+                    </div>
+                    
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 {% endblock %}
+
+
+
+
+
+
+
+
+
