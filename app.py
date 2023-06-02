@@ -1,22 +1,22 @@
 from flask import Flask, request, redirect, url_for, session, render_template, flash
 import mysql.connector
 
-
 app = Flask(__name__)
 app.secret_key = 'axamparos'  # Set a secret key for session encryption
 
-connection =  mysql.connector.connect(host='localhost', port='3306', database='library_system_final', user='root', password='Sporar9!')
+connection = mysql.connector.connect(host='localhost', port='3306', database='library_system_final', user='root',
+                                     password='Sporar9!')
 
 
 @app.route("/")
 def index():
-
     return '''
     <div class="container text-center">
         <h1>Welcome to ADOXOS</h1>
         <a href="/login" class="btn btn-primary">Login</a>
     </div>
     '''
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -103,32 +103,37 @@ def login():
     </form>
     '''
 
+
 @app.route("/main/admin")
 def main_admin():
     first_name = session['user'][3]
     return render_template("main_admin.html", first_name=first_name)
+
 
 @app.route("/main/admin/query_3_1_1", methods=["GET", "POST"])
 def query_3_1_1():
     # Code for the "Total loans per school" query goes here
     pass
 
+
 @app.route("/main/admin/query_3_1_2", methods=["GET", "POST"])
 def query_3_1_2():
     # Code for the "Book authors and teacher loans per category" query goes here
     pass
+
 
 @app.route("/main/admin/query_3_1_3", methods=["GET", "POST"])
 def query_3_1_3():
     # Code for the "Loans from young teachers" query goes here
     pass
 
+
 @app.route("/main/admin/query_3_1_4", methods=["GET", "POST"])
 def query_3_1_4():
     # Code for the "Authors without a lent book" query goes here
     try:
         cursor = connection.cursor()
-        query="""
+        query = """
             select distinct a.author_ID, a.author_name 
             from author a 
             inner join author_books b on a.author_ID = b.author_ID
@@ -141,17 +146,18 @@ def query_3_1_4():
         authors_no_loan = cursor.fetchall()
         connection.commit()
         cursor.close()
-        return render_template("authors_no_loan.html", authors_no_loan = authors_no_loan)
+        return render_template("authors_no_loan.html", authors_no_loan=authors_no_loan)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
+
 
 @app.route("/main/admin/query_3_1_5", methods=["GET", "POST"])
 def query_3_1_5():
     # Code for the "School admin pairs with same # of loans made (20+ loans)" query goes here
-        # Code for the "Authors without a lent book" query goes here
+    # Code for the "Authors without a lent book" query goes here
     try:
         cursor = connection.cursor()
-        query="""
+        query = """
             select distinct a1.school_admin, a1.loan_count
             from (
                 select a.school_admin, count(*) as loan_count
@@ -175,20 +181,22 @@ def query_3_1_5():
         hyperactive_operators = cursor.fetchall()
         connection.commit()
         cursor.close()
-        return render_template("hyperactive_operators.html", hyperactive_operators = hyperactive_operators)
+        return render_template("hyperactive_operators.html", hyperactive_operators=hyperactive_operators)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
+
 
 @app.route("/main/admin/query_3_1_6", methods=["GET", "POST"])
 def query_3_1_6():
     # Code for the "Most popular book category pairs" query goes here
     pass
 
+
 @app.route("/main/admin/query_3_1_7", methods=["GET", "POST"])
 def query_3_1_7():
     try:
         cursor = connection.cursor()
-        query="""
+        query = """
             SELECT distinct a.author_name,  a.author_ID
             FROM author a
             INNER JOIN author_books b ON a.author_ID = b.author_ID
@@ -212,14 +220,9 @@ def query_3_1_7():
         inactive_authors = cursor.fetchall()
         connection.commit()
         cursor.close()
-        return render_template("inactive_authors.html", inactive_authors = inactive_authors)
+        return render_template("inactive_authors.html", inactive_authors=inactive_authors)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
-    
-
-
-
-    
 
 
 @app.route("/main/admin/school", methods=["GET", "POST"])
@@ -242,7 +245,8 @@ def main_admin_school():
             try:
                 cursor = connection.cursor()
                 query = "INSERT INTO school (school_name, postal_code, city_name, school_phone_number, school_email, school_principal, school_admin) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-                values = (school_name, postal_code, city_name, school_phone_number, school_email, school_principal, school_admin)
+                values = (
+                school_name, postal_code, city_name, school_phone_number, school_email, school_principal, school_admin)
                 cursor.execute(query, values)
                 connection.commit()
                 cursor.close()
@@ -280,8 +284,9 @@ def main_admin_school():
                 cursor = connection.cursor()
                 query = "UPDATE school SET school_name = %s, postal_code = %s, city_name = %s, school_phone_number = %s, school_email = %s, school_principal = %s, school_admin = %s WHERE school_id = %s"
                 values = (
-                school_name, postal_code, city_name, school_phone_number, school_email, school_principal, school_admin,
-                school_id)
+                    school_name, postal_code, city_name, school_phone_number, school_email, school_principal,
+                    school_admin,
+                    school_id)
                 cursor.execute(query, values)
                 connection.commit()
                 cursor.close()
@@ -300,6 +305,7 @@ def main_admin_school():
         return render_template("main_admin_school.html", schools=schools)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
+
 
 @app.route("/main/admin/registrations", methods=["GET", "POST"])
 def accept_registration():
@@ -338,7 +344,8 @@ def accept_registration():
             try:
                 cursor = connection.cursor()
                 query = "INSERT INTO users(username, passwrd, first_name, last_name, email, school_id, date_of_birth, available_loans, available_reservations, user_type) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-                values = (username, passwrd, first_name, last_name, email, school_id, date_of_birth, available_loans, available_reservations, user_type)
+                values = (username, passwrd, first_name, last_name, email, school_id, date_of_birth, available_loans,
+                          available_reservations, user_type)
                 cursor.execute(query, values)
                 connection.commit()
                 cursor.close()
@@ -369,11 +376,13 @@ def accept_registration():
 def main_admin_queries():
     return 0
 
+
 @app.route("/main/school_admin")
 def main_school_admin():
     first_name = session['user'][3]
     school_id = session['user'][6]
     return render_template("main_school_admin.html", first_name=first_name, school_id=school_id)
+
 
 @app.route("/main/school_admin/books", methods=["GET", "POST"])
 def main_school_admin_books():
@@ -449,6 +458,7 @@ def main_school_admin_books():
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
 
+
 @app.route("/main/school_admin/registrations", methods=["GET", "POST"])
 def accept_user_registration():
     if 'user' not in session:
@@ -489,7 +499,8 @@ def accept_user_registration():
             try:
                 cursor = connection.cursor()
                 query = "INSERT INTO users(username, passwrd, first_name, last_name, email, school_id, date_of_birth, available_loans, available_reservations, user_type) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-                values = (username, passwrd, first_name, last_name, email, school_id, date_of_birth, available_loans, available_reservations, user_type)
+                values = (username, passwrd, first_name, last_name, email, school_id, date_of_birth, available_loans,
+                          available_reservations, user_type)
                 cursor.execute(query, values)
                 connection.commit()
                 cursor.close()
@@ -516,6 +527,8 @@ def accept_user_registration():
         return render_template("user_registrations.html", registrations=registrations)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
+
+
 
 @app.route("/main/school_admin/library", methods=["GET", "POST"])
 def main_school_admin_library():
@@ -576,6 +589,63 @@ def main_school_admin_library():
             except mysql.connector.Error as error:
                 return f"Database Error: {error}"
 
+        elif action == "make_loan":
+            # Make a loan from the reservation
+            reservation_id = request.form.get("reservation_id")
+            try:
+                cursor = connection.cursor()
+                cursor.execute("CALL lendbookfromreservation(%s)", (reservation_id,))
+                connection.commit()
+                cursor.close()
+
+                flash('Loan created from reservation.', 'success')
+                return redirect(url_for('main_school_admin_library'))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+
+        elif action == "reject":
+            # Reject the reservation
+            reservation_id = request.form.get("reservation_id")
+            try:
+                cursor = connection.cursor()
+                cursor.execute("CALL delete_active_reservation(%s)", (reservation_id,))
+                connection.commit()
+                cursor.close()
+
+                flash('Reservation rejected.', 'success')
+                return redirect(url_for('main_school_admin_library'))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+
+
+        elif action == "end_loan":
+            # End the loan
+            loan_id = request.form.get("loan_id")
+            try:
+                cursor = connection.cursor()
+                query = "UPDATE book_loan SET loan_status = 'completed' WHERE loan_ID = %s"
+                cursor.execute(query, (loan_id,))
+                connection.commit()
+                cursor.close()
+                flash('Loan completed.', 'success')
+                return redirect(url_for('main_school_admin_library'))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+        elif action == 'add_loan':
+            # Add a new loan
+            book_id = request.form.get('book_id')
+            user_id = request.form.get('user_id')
+            try:
+                cursor = connection.cursor()
+                cursor.callproc('physical_loan', [book_id, user_id])
+                connection.commit()
+                cursor.close()
+
+                flash('Loan added.', 'success')
+                return redirect(url_for('main_school_admin_library'))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+
     # Retrieve the school ID of the logged-in admin
     school_id = session['user'][6]
 
@@ -585,7 +655,7 @@ def main_school_admin_library():
             "SELECT sl.school_lib_id, sl.school_id, sl.book_id, sl.number_of_copies, sl.number_of_reservations, sl.total_copies, b.title "
             "FROM school_library AS sl "
             "JOIN book AS b ON sl.book_id = b.book_id "
-            "WHERE sl.school_id = %s",  (session["user"][6],))
+            "WHERE sl.school_id = %s", (session["user"][6],))
         books = cursor.fetchall()
 
         # Fetch active reservations for the school
@@ -595,14 +665,31 @@ def main_school_admin_library():
             "JOIN school_library AS sl ON r.school_id = sl.school_id AND r.book_id = sl.book_id "
             "WHERE r.reservation_status = 'active' AND r.school_id = %s", (session["user"][6],))
         reservations = cursor.fetchall()
+        # Fetch active loans for the school
+        cursor.execute(
+            "SELECT bl.loan_ID, sl.book_id, bl.user_id, bl.starting_date, bl.end_date "
+            "FROM book_loan AS bl "
+            "JOIN school_library AS sl ON bl.school_id = sl.school_id AND bl.book_id = sl.book_id "
+            "WHERE bl.loan_status = 'in_progress' AND bl.school_id = %s", (session["user"][6],))
+        loans = cursor.fetchall()
+        # Fetch overdue loans for the school
+        cursor.execute(
+            "SELECT bl.loan_ID, sl.book_id, bl.user_id, bl.starting_date, bl.end_date "
+            "FROM book_loan AS bl "
+            "JOIN school_library AS sl ON bl.school_id = sl.school_id AND bl.book_id = sl.book_id "
+            "WHERE bl.loan_status = 'overdue' AND bl.school_id = %s", (session["user"][6],))
+        overdue_loans = cursor.fetchall()
         cursor.close()
-        return render_template("main_school_admin_library.html", books=books, reservations=reservations)
+        return render_template("main_school_admin_library.html", books=books, reservations=reservations, loans=loans, overdue_loans=overdue_loans)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
+
+
 
 @app.route("/main/school_admin/queries", methods=["GET", "POST"])
 def main_school_admin_queries():
     return 0
+
 
 @app.route("/main/users")
 def main_users():
@@ -610,7 +697,9 @@ def main_users():
     first_name = session['user'][3]
     school_id = session['user'][6]
     user_type = session['user'][10]
-    return render_template("main_users.html", user_id=user_id, first_name=first_name, school_id=school_id, user_type=user_type)
+    return render_template("main_users.html", user_id=user_id, first_name=first_name, school_id=school_id,
+                           user_type=user_type)
+
 
 @app.route("/main/users/library", methods=["GET", "POST"])
 def main_users_library():
@@ -661,13 +750,71 @@ def main_users_library():
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
 
+
 @app.route("/main/users/library/reviews")
 def main_users_library_reviews():
     return 0;
 
-@app.route("/main/users/personal_info")
+
+@app.route("/main/users/personal_info", methods=["GET", "POST"])
 def main_users_personal_info():
-    return 0;
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    user_id = session["user"][0]
+    user_type = session["user"][10]
+
+    if user_type not in ["teacher", "admin", "school_admin"]:
+        try:
+            cursor = connection.cursor()
+            cursor.execute(
+                "SELECT username, first_name, last_name, email, school_id, date_of_birth "
+                "FROM users "
+                "WHERE user_id = %s",
+                (user_id,)
+            )
+            personal_info = cursor.fetchone()
+            cursor.close()
+        except mysql.connector.Error as error:
+            return f"Database Error: {error}"
+
+        return render_template("main_users_personal_info.html", personal_info=personal_info)
+
+    if request.method == "POST":
+        # Handle form submission
+        username = request.form.get("username")
+        password = request.form.get("password")
+        first_name = request.form.get("first_name")
+        last_name = request.form.get("last_name")
+        email = request.form.get("email")
+
+        # Update the user's personal information
+        try:
+            cursor = connection.cursor()
+            cursor.execute(
+                "UPDATE users SET username = %s, passwrd = %s, first_name = %s, last_name = %s, email = %s WHERE user_id = %s",
+                (username, password, first_name, last_name, email, user_id)
+            )
+            connection.commit()
+            cursor.close()
+
+            flash("Personal information updated.", "success")
+            return redirect(url_for("main_users_personal_info"))
+        except mysql.connector.Error as error:
+            return f"Database Error: {error}"
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute(
+            "SELECT * FROM users WHERE user_id = %s",
+            (user_id,)
+        )
+        user_info = cursor.fetchone()
+        cursor.close()
+
+        return render_template("main_users_personal_info.html", user_info=user_info)
+    except mysql.connector.Error as error:
+        return f"Database Error: {error}"
 
 
 @app.route("/main/users/queries")
