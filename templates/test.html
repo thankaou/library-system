@@ -1,0 +1,42 @@
+{% extends "global_layout.html" %}
+{% block content %}
+<h1>Authors with >=5 books less than the author with the most books </h1>
+ <div class="container">
+    {% include "flash_messages.html" %}
+    <div class="row" id="row">
+        <div class="col-md-12">
+            <div class="card" id="card-container">
+                <div class="card-body" id="card">
+               
+                
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Category name</th>
+                                    
+                                    
+                                    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                                    <tr>
+                                        <td> {{ selected_value }} </td>
+                                        
+                                         
+
+                                                                           
+                                    </tr>
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
