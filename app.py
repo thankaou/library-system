@@ -110,30 +110,87 @@ def main_admin():
     return render_template("main_admin.html", first_name=first_name)
 
 
+
 @app.route("/main/admin/query_3_1_1", methods=["GET", "POST"])
 def query_3_1_1():
     # Code for the "Total loans per school" query goes here
     pass
 
-
 @app.route("/main/admin/query_3_1_2", methods=["GET", "POST"])
 def query_3_1_2():
-    # Code for the "Book authors and teacher loans per category" query goes here
-    pass
+    #ΔΕΝ ΕΧΕΙ ΤΕΛΕΙΩΣΕΙ
+    if(request.method == "POST"):
+        try:
+            selected_value = request.form.get('category')
+            #return render_template("test.html", selected_value = selected_value)
+            cursor = connection.cursor()
+            query="""
+                select distinct d.author_name,f.category_name 
+                from book a
+                inner join author_books c on a.book_ID = c.book_ID
+                inner join author d on d.author_ID = c.author_ID
+                inner join category_books e on a.book_ID = e.book_ID
+                inner join category f on f.category_ID = e.category_ID
+                where f.category_ID = %s;
+                
+
+                """
+            values = (selected_value,)
+            cursor.execute(query, values)
+            authors_category = cursor.fetchall()
+            connection.commit()
+            cursor.close()
+            return render_template("category_authors_teachers.html", authors_category = authors_category) #μπορει γενικα να μπει και 2ο ορισμα 
+        
+        except mysql.connector.Error as error:
+            return f"Database Error: {error}"
+
+    else:
+        try:
+
+            cursor = connection.cursor()
+            query="""select category_ID,category_name from category order by category_ID asc;"""
+            cursor.execute(query)
+            category = cursor.fetchall()
+            connection.commit()
+            cursor.close()
+            #return render_template("test.html",  category=category)
+            return render_template("choose_category.html",  category=category)
+        except mysql.connector.Error as error:
+            return f"Database Error: {error}"
+
 
 
 @app.route("/main/admin/query_3_1_3", methods=["GET", "POST"])
 def query_3_1_3():
     # Code for the "Loans from young teachers" query goes here
-    pass
+    try:
+        cursor = connection.cursor()
+        query="""
+        select a.user_id,a.first_name, a.last_name, count(*) as loan_number
+        from users a
+        inner join book_loan b on a.user_id = b.user_id 
+        where a.user_type = 'teacher'
+        and  (date_format(from_days(datediff(now(),a.date_of_birth)), '%Y')  + 0 ) < 40
+        group by a.user_id,a.first_name, a.last_name
+        order by loan_number desc;"""
 
+        cursor.execute(query)
+        teachers_under_fourty = cursor.fetchall()
+        connection.commit()
+        cursor.close()
+        return render_template("teachers_under_fourty.html", teachers_under_fourty = teachers_under_fourty)
+
+    
+    except mysql.connector.Error as error:
+        return f"Database Error: {error}"
 
 @app.route("/main/admin/query_3_1_4", methods=["GET", "POST"])
 def query_3_1_4():
     # Code for the "Authors without a lent book" query goes here
     try:
         cursor = connection.cursor()
-        query = """
+        query="""
             select distinct a.author_ID, a.author_name 
             from author a 
             inner join author_books b on a.author_ID = b.author_ID
@@ -146,18 +203,17 @@ def query_3_1_4():
         authors_no_loan = cursor.fetchall()
         connection.commit()
         cursor.close()
-        return render_template("authors_no_loan.html", authors_no_loan=authors_no_loan)
+        return render_template("authors_no_loan.html", authors_no_loan = authors_no_loan)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
-
 
 @app.route("/main/admin/query_3_1_5", methods=["GET", "POST"])
 def query_3_1_5():
     # Code for the "School admin pairs with same # of loans made (20+ loans)" query goes here
-    # Code for the "Authors without a lent book" query goes here
+        # Code for the "Authors without a lent book" query goes here
     try:
         cursor = connection.cursor()
-        query = """
+        query="""
             select distinct a1.school_admin, a1.loan_count
             from (
                 select a.school_admin, count(*) as loan_count
@@ -181,22 +237,42 @@ def query_3_1_5():
         hyperactive_operators = cursor.fetchall()
         connection.commit()
         cursor.close()
-        return render_template("hyperactive_operators.html", hyperactive_operators=hyperactive_operators)
+        return render_template("hyperactive_operators.html", hyperactive_operators = hyperactive_operators)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
-
 
 @app.route("/main/admin/query_3_1_6", methods=["GET", "POST"])
 def query_3_1_6():
     # Code for the "Most popular book category pairs" query goes here
-    pass
+    try:
+        cursor = connection.cursor()
+        query="""
+            select distinct c1.category_name, c2.category_name, count(*) as loan_count
+            from book_loan bl
+            join book b on bl.book_id = b.book_id
+            join category_books cb1 on b.book_id = cb1.book_id
+            join category_books cb2 on b.book_id = cb2.book_id
+            join category c1 on cb1.category_id = c1.category_id
+            join category c2 on cb2.category_id = c2.category_id
+            where c1.category_name < c2.category_name /*distinct pairs*/
+            group by c1.category_name, c2.category_name
+            order by loan_count desc
+            limit 3;
 
-
+        """
+        cursor.execute(query)
+        top_three = cursor.fetchall()
+        connection.commit()
+        cursor.close()
+        return render_template("top_three.html",top_three = top_three)
+    except mysql.connector.Error as error:
+        return f"Database Error: {error}"
+    
 @app.route("/main/admin/query_3_1_7", methods=["GET", "POST"])
 def query_3_1_7():
     try:
         cursor = connection.cursor()
-        query = """
+        query="""
             SELECT distinct a.author_name,  a.author_ID
             FROM author a
             INNER JOIN author_books b ON a.author_ID = b.author_ID
@@ -220,9 +296,12 @@ def query_3_1_7():
         inactive_authors = cursor.fetchall()
         connection.commit()
         cursor.close()
-        return render_template("inactive_authors.html", inactive_authors=inactive_authors)
+        return render_template("inactive_authors.html", inactive_authors = inactive_authors)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
+    
+
+
 
 
 @app.route("/main/admin/school", methods=["GET", "POST"])
