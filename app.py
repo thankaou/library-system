@@ -739,27 +739,36 @@ def main_school_admin_library():
 
         # Fetch active reservations for the school
         cursor.execute(
-            "SELECT r.reservation_ID, r.book_id, r.user_id, r.reservation_date, r.end_of_reservation_date "
+            "SELECT r.reservation_ID, r.book_id, r.user_id, r.reservation_date, r.end_of_reservation_date, b.title, u.first_name, u.last_name "
             "FROM reservation AS r "
             "JOIN school_library AS sl ON r.school_id = sl.school_id AND r.book_id = sl.book_id "
+            "JOIN users AS u ON r.user_id = u.user_id "
+            "JOIN book AS b ON r.book_id = b.book_id "
             "WHERE r.reservation_status = 'active' AND r.school_id = %s", (session["user"][6],))
         reservations = cursor.fetchall()
+
         # Fetch active loans for the school
         cursor.execute(
-            "SELECT bl.loan_ID, sl.book_id, bl.user_id, bl.starting_date, bl.end_date "
+            "SELECT bl.loan_ID, sl.book_id, bl.user_id, bl.starting_date, bl.end_date, b.title, u.first_name, u.last_name "
             "FROM book_loan AS bl "
             "JOIN school_library AS sl ON bl.school_id = sl.school_id AND bl.book_id = sl.book_id "
+            "JOIN users AS u ON bl.user_id = u.user_id "
+            "JOIN book AS b ON bl.book_id = b.book_id "
             "WHERE bl.loan_status = 'in_progress' AND bl.school_id = %s", (session["user"][6],))
         loans = cursor.fetchall()
+
         # Fetch overdue loans for the school
         cursor.execute(
-            "SELECT bl.loan_ID, sl.book_id, bl.user_id, bl.starting_date, bl.end_date "
+            "SELECT bl.loan_ID, sl.book_id, bl.user_id, bl.starting_date, bl.end_date, b.title, u.first_name, u.last_name "
             "FROM book_loan AS bl "
             "JOIN school_library AS sl ON bl.school_id = sl.school_id AND bl.book_id = sl.book_id "
+            "JOIN users AS u ON bl.user_id = u.user_id "
+            "JOIN book AS b ON bl.book_id = b.book_id "
             "WHERE bl.loan_status = 'overdue' AND bl.school_id = %s", (session["user"][6],))
         overdue_loans = cursor.fetchall()
         cursor.close()
-        return render_template("main_school_admin_library.html", books=books, reservations=reservations, loans=loans, overdue_loans=overdue_loans)
+        return render_template("main_school_admin_library.html", books=books, reservations=reservations, loans=loans,
+                               overdue_loans=overdue_loans)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
 
