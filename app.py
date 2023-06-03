@@ -1110,7 +1110,32 @@ def main_users_library():
 
 @app.route("/main/users/library/reviews")
 def main_users_library_reviews():
-    return 0;
+    if request.method == "POST":
+        book_id = request.form.get("book_id")
+        loan_id = request.form.get("loan_id")
+        rating = request.form.get("rating")
+        review = request.form.get("review")
+        user_id = session['user'][0]
+        try:
+            cursor = connection.cursor()
+
+            query = """
+                INSERT INTO book_review (book_id, user_id, loan_id, rating, review)
+                VALUES (%s, %s, %s, %s, %s)
+                """
+            values = (book_id, user_id, loan_id, rating, review)
+            cursor.execute(query, values)
+            connection.commit()
+
+            return redirect(url_for("main_users_library_reviews"))
+
+        except mysql.connector.Error as error:
+            # Handle database connection error
+            return f"Database Error: {error}"
+
+    return render_template("main_users_library_reviews.html")
+
+
 
 
 @app.route("/main/users/personal_info", methods=["GET", "POST"])
