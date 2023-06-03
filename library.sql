@@ -32,7 +32,7 @@ user_type enum('student', 'teacher', 'admin','school admin') not null,
 user_status enum('active', 'inactive') default 'active',
 book_loans int default '0',
 book_reservations int default '0',
-has_overdue_books enum('yes', 'no') default 'no',
+has_overdue_books enum('yes', 'no') default 'no', /*δεν ξερω αν χρειαζεται*/
 /*να ελεγξω τι γινεται κατα την εισαγωγη αν δεν εινια κατι */
 unique(username) ,
 primary key(user_id),
@@ -110,6 +110,8 @@ school_id int not null,
 book_id int not null,
 number_of_copies int unsigned default 0,
 number_of_reservations int unsigned default 0,
+total_copies int unsigned default 0,
+/* να βαλω αλλο πεδιο που να αρχικοποιειται σε 0 αν εισαγεται βιβλιο?*/
 /*να δω αν εχει νοημα ως αρνητικο*/
 primary key(school_lib_id),
 unique(school_id,book_id),
@@ -167,6 +169,7 @@ user_id int not null,
 loan_ID int unsigned not null,
 rating enum('1','2','3','4','5') not null,
 review varchar(280),
+verification enum('verified','not_verified') default 'not_verified',
 primary key(review_id),
 unique(book_id,user_id,loan_ID),
 constraint fk_book_review_loan foreign key (loan_ID) 
