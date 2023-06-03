@@ -726,14 +726,11 @@ def main_school_admin_library():
     if request.method == "POST":
         action = request.form.get("action")
 
-
-
-
         if action == "create":
-            #book_id = request.form.get("book_id")
+            # book_id = request.form.get("book_id")
             number_of_copies = request.form.get("number_of_copies")
             total_copies = request.form.get("total_copies")
-            
+
             ISBN = request.form.get("ISBN")
 
             title = request.form.get("title")
@@ -752,27 +749,26 @@ def main_school_admin_library():
 
             categories = request.form.get("categories")
             category_list = categories.split(",")
-            #τα χωριζει με βαση το ονομα της κατηγοριας
+            # τα χωριζει με βαση το ονομα της κατηγοριας
             authors = request.form.get("authors")
             author_list = authors.split(",")
 
             keywords = request.form.get("keywords")
             keyword_list = keywords.split(",")
 
-            
             try:
                 cursor = connection.cursor()
-                cursor.callproc('insert_book', [ISBN , title, language,abstract,publisher,page_nr])
+                cursor.callproc('insert_book', [ISBN, title, language, abstract, publisher, page_nr])
                 connection.commit()
                 cursor.close()
 
                 ####
                 cursor = connection.cursor()
-                #query="""
+                # query="""
                 #    select book_id from book where title = %s
 
-                #"""
-                query="""
+                # """
+                query = """
                     select book_id from book where ISBN = %s
 
                 """
@@ -786,9 +782,10 @@ def main_school_admin_library():
                 ###
 
                 cursor = connection.cursor()
-                cursor.execute("SELECT COUNT(*) FROM school_library WHERE school_id = %s AND book_id = %s", (session['user'][6], book_id))
-                #cursor.execute("SELECT COUNT(*) FROM school_library where school_id = %s and book_id= %s ")
-                #values = (session['user'][6],book_id,)
+                cursor.execute("SELECT COUNT(*) FROM school_library WHERE school_id = %s AND book_id = %s",
+                               (session['user'][6], book_id))
+                # cursor.execute("SELECT COUNT(*) FROM school_library where school_id = %s and book_id= %s ")
+                # values = (session['user'][6],book_id,)
                 result = cursor.fetchone()
                 count = result[0]
                 connection.commit()
@@ -800,14 +797,12 @@ def main_school_admin_library():
                     values = (session['user'][6], book_id, number_of_copies, total_copies)
                     cursor.execute(query, values)
                     connection.commit()
-                    
 
                     for cat in category_list:
-                        
                         cursor.callproc('insert_category', [cat])
                         connection.commit()
 
-                        query="""
+                        query = """
                         select category_ID from category where  category_name = %s
 
                         """
@@ -822,15 +817,14 @@ def main_school_admin_library():
                         values = (category_id, book_id)
                         cursor.execute(query, values)
                         connection.commit()
-                        #ΤΟ ΙΔΙΟ ΓΙΑ KEYWORDS,authors
-                    #author_list = authors.split(",")            keyword_list = keywords.split(",")
+                        # ΤΟ ΙΔΙΟ ΓΙΑ KEYWORDS,authors
+                    # author_list = authors.split(",")            keyword_list = keywords.split(",")
 
                     for author in author_list:
-                        
                         cursor.callproc('insert_author', [author])
                         connection.commit()
 
-                        query="""
+                        query = """
                         select author_ID from author where  author_name = %s
 
                         """
@@ -847,11 +841,10 @@ def main_school_admin_library():
                         connection.commit()
 
                     for keyword in keyword_list:
-                        
                         cursor.callproc('insert_keyword', [keyword])
                         connection.commit()
 
-                        query="""
+                        query = """
                         select keyword_ID from keyword where keyword_name = %s
 
                         """
@@ -866,19 +859,17 @@ def main_school_admin_library():
                         values = (keyword_id, book_id)
                         cursor.execute(query, values)
                         connection.commit()
-                    
 
                     cursor.close()
                     flash('Book added to the school library.', 'success')
                     return redirect(url_for('main_school_admin_library'))
-                
 
-                
+
+
                 else:
-                    flash('Already existed!!.', 'success') ##να αλλαξω το success
+                    flash('Already existed!!.', 'success')  ##να αλλαξω το success
                     return redirect(url_for('main_school_admin_library'))
 
-                
                 """
                 cursor = connection.cursor()
                 query = "INSERT INTO school_library (school_id, book_id, number_of_copies, total_copies) VALUES (%s, %s, %s, %s)"
@@ -912,7 +903,6 @@ def main_school_admin_library():
             school_lib_id = request.form.get("school_lib_id")
             number_of_copies = request.form.get("number_of_copies")
             total_copies = request.form.get("total_copies")
-            
 
             try:
                 cursor = connection.cursor()
@@ -1016,8 +1006,6 @@ def main_school_admin_library():
             "WHERE bl.loan_status = 'in_progress' AND bl.school_id = %s", (session["user"][6],))
         loans = cursor.fetchall()
 
-
-
         # Fetch overdue loans for the school
         cursor.execute(
             "SELECT bl.loan_ID, sl.book_id, bl.user_id, bl.starting_date, bl.end_date, b.title, u.first_name, u.last_name "
@@ -1032,8 +1020,6 @@ def main_school_admin_library():
                                overdue_loans=overdue_loans)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
-
-
 
 
 @app.route("/main/school_admin/queries", methods=["GET", "POST"])
@@ -1081,19 +1067,22 @@ def main_users_library():
                 cursor = connection.cursor()
                 cursor.execute("SELECT book_reservations FROM users WHERE user_id = %s", (user_id,))
                 reservations_before = cursor.fetchone()[0]
+                cursor.execute("SELECT book_id FROM reservation WHERE user_id = %s", (user_id,))
+                reservations = [reservation[0] for reservation in cursor.fetchall()]
                 cursor.execute(
                     "SELECT book_id FROM book_loan WHERE user_id = %s AND loan_status IN ('overdue', 'in_progress')",
                     (user_id,))
-                loaned_books = cursor.fetchall()
-                loaned_book_ids = [book[0] for book in loaned_books]
-
-                if book_id in loaned_book_ids:
+                loaned_book_ids = [book[0] for book in cursor.fetchall()]
+                print(reservations)
+                if int(book_id) in loaned_book_ids:
                     flash('You already have a loan for this book.', 'danger')
+                elif int(book_id) in reservations:
+                    flash('You have already reserved this book.', 'danger')
                 else:
                     cursor.callproc("reserve_book", (book_id, user_id))
                     cursor.execute("SELECT book_reservations FROM users WHERE user_id = %s", (user_id,))
                     reservations_after = cursor.fetchone()[0]
-                    if reservations_after > reservations_before or book_id in loaned_book_ids:
+                    if reservations_after > reservations_before:
                         connection.commit()
                         flash('Book reserved successfully.', 'success')
                     else:
@@ -1140,7 +1129,7 @@ def main_users_library():
         return f"Database Error: {error}"
 
 
-@app.route("/main/users/library/reviews")
+@app.route("/main/users/library/reviews", methods=["GET", "POST"])
 def main_users_library_reviews():
     if request.method == "POST":
         book_id = request.form.get("book_id")
@@ -1166,8 +1155,6 @@ def main_users_library_reviews():
             return f"Database Error: {error}"
 
     return render_template("main_users_library_reviews.html")
-
-
 
 
 @app.route("/main/users/personal_info", methods=["GET", "POST"])
