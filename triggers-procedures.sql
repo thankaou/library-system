@@ -19,6 +19,23 @@ end //
 delimiter ;
 
 delimiter //
+create trigger one_school_admin_max
+before insert on users
+for each row
+begin
+	if new.user_type = 'school admin'
+    and exists (
+    select * from users
+    where user_type ='school admin' and school_id = new.school_id) then
+    set new.user_type = null;
+    end if;
+end //
+delimiter ;
+
+
+
+
+delimiter //
 create trigger loan_completion
 after update on book_loan
 for each row
@@ -304,3 +321,59 @@ begin
 
 end //
 delimiter ;
+
+
+delimiter // 
+create procedure insert_book(in iISBN char(14),in ititle varchar(300),in ibook_language varchar(50),in iabstract varchar(2000),in ipublisher varchar(50), in ipage_nr int unsigned)
+begin
+    -- get the number of book loans for the user
+    /*select book_loans into totalloans from users where user_id = userid;*/
+    -- check if the user can borrow the book
+    if not exists (
+        /*select 1 from book where title = ititle*/
+        select 1 from book where ISBN = iISBN
+    ) then
+		insert into book (ISBN, title, book_language, abstract, publisher, page_nr) values (iISBN, ititle, ibook_language, iabstract, ipublisher, ipage_nr);
+    end if;
+end //
+
+delimiter ;
+
+delimiter // 
+create procedure insert_category(in icategory_name varchar(70))
+begin
+    if not exists (
+        /*select 1 from book where title = ititle*/
+        select 1 from category where category_name = icategory_name
+    ) then
+		insert into category (category_name) values (icategory_name);
+    end if;
+end //
+
+delimiter ;
+
+delimiter // 
+create procedure insert_keyword(in ikeyword_name varchar(70))
+begin
+    if not exists (
+        select 1 from keyword where keyword_name = ikeyword_name
+    ) then
+		insert into keyword (keyword_name) values (ikeyword_name);
+    end if;
+end //
+
+delimiter ;
+
+delimiter // 
+create procedure insert_author(in iauthor_name varchar(70))
+begin
+    if not exists (
+        select 1 from author where author_name = iauthor_name
+    ) then
+		insert into author (author_name) values (iauthor_name);
+    end if;
+end //
+
+delimiter ;
+
+
