@@ -265,3 +265,29 @@
       transform: translateX(-2px);
   }
 }
+
+.custom-select-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.custom-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: none;
+  background-color: white;
+  padding-right: 20px;
+  cursor: pointer;
+}
+
+.custom-select-arrow {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 12px;
+}
+
+
