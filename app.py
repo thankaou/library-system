@@ -790,6 +790,18 @@ def main_users_library():
 
     if request.method == "POST":
         action = request.form.get("action")
+        if action == "Cancel Reservation":
+            reservation_id = request.form.get("reservation_id")
+            try:
+                cursor = connection.cursor()
+                cursor.execute("CALL delete_active_reservation(%s)", (reservation_id,))
+                connection.commit()
+                cursor.close()
+
+                flash('Reservation cancelled.', 'success')
+                return redirect(url_for('main_users_library'))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
 
         if action == "Make Reservation":
             book_id = request.form.get("book_id")
@@ -798,16 +810,27 @@ def main_users_library():
                 cursor = connection.cursor()
                 cursor.execute("SELECT book_reservations FROM users WHERE user_id = %s", (user_id,))
                 reservations_before = cursor.fetchone()[0]
-                cursor.callproc("reserve_book", (book_id, user_id))
-                cursor.execute("SELECT book_reservations FROM users WHERE user_id = %s", (user_id,))
-                reservations_after = cursor.fetchone()[0]
-                if reservations_after > reservations_before:
-                    connection.commit()
-                    flash('Book reserved successfully.', 'success')
+                cursor.execute(
+                    "SELECT book_id FROM book_loan WHERE user_id = %s AND loan_status IN ('overdue', 'in_progress')",
+                    (user_id,))
+                loaned_books = cursor.fetchall()
+                loaned_book_ids = [book[0] for book in loaned_books]
+
+                if book_id in loaned_book_ids:
+                    flash('You already have a loan for this book.', 'danger')
                 else:
-                    flash('No more reservations allowed.', 'danger')
+                    cursor.callproc("reserve_book", (book_id, user_id))
+                    cursor.execute("SELECT book_reservations FROM users WHERE user_id = %s", (user_id,))
+                    reservations_after = cursor.fetchone()[0]
+                    if reservations_after > reservations_before or book_id in loaned_book_ids:
+                        connection.commit()
+                        flash('Book reserved successfully.', 'success')
+                    else:
+                        flash('No more reservations allowed.', 'danger')
+
                 cursor.close()
                 return redirect(url_for("main_users_library"))
+
             except mysql.connector.Error as error:
                 return f"Database Error: {error}"
 
