@@ -1,0 +1,53 @@
+{% extends "global.html" %}
+
+{% block content %}
+<div class="card" id="card-container">
+    <div class="card-body" id="card">
+        <h1>Register</h1>
+        <form method="POST" action="/register">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="first_name">First Name</label>
+                <input type="text" class="form-control" id="first_name" name="first_name" required>
+            </div>
+            <div class="form-group">
+                <label for="last_name">Last Name</label>
+                <input type="text" class="form-control" id="last_name" name="last_name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+           <div class="form-group">
+                <label for="school">School Name:</label>
+                <select class="form-control" id="school" name="school">
+                    <option value="">Select a school</option>
+                    {% for school in schools %}
+                        <option value="{{ school }}">{{ school }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date_of_birth">Date of Birth</label>
+                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required>
+            </div>
+            <div class="form-group">
+                <label for="registration_type">Choose your registration type:</label>
+                <select class="form-control" id="registration_type" name="registration_type">
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="school_admin">School Admin</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Register</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
