@@ -167,33 +167,57 @@ def query_3_1_1():
     # Code for the "Total loans per school" query goes here
     pass
 
-
 @app.route("/main/admin/query_3_1_2", methods=["GET", "POST"])
 def query_3_1_2():
-    # ΔΕΝ ΕΧΕΙ ΤΕΛΕΙΩΣΕΙ
-    if (request.method == "POST"):
+    
+    if(request.method == "POST"):
         try:
             selected_value = request.form.get('category')
-            # return render_template("test.html", selected_value = selected_value)
+            temp = selected_value
+            #return render_template("test.html", selected_value = selected_value)
             cursor = connection.cursor()
-            query = """
-                   select distinct d.author_name,f.category_name 
-                   from book a
-                   inner join author_books c on a.book_ID = c.book_ID
-                   inner join author d on d.author_ID = c.author_ID
-                   inner join category_books e on a.book_ID = e.book_ID
-                   inner join category f on f.category_ID = e.category_ID
-                   where f.category_ID = %s;
+            query="""
+                select distinct d.author_name,f.category_name 
+                from book a
+                inner join author_books c on a.book_ID = c.book_ID
+                inner join author d on d.author_ID = c.author_ID
+                inner join category_books e on a.book_ID = e.book_ID
+                inner join category f on f.category_ID = e.category_ID
+                where f.category_ID = %s;
+                
 
-
-                   """
+                """
             values = (selected_value,)
             cursor.execute(query, values)
             authors_category = cursor.fetchall()
+            
+            
+            
+            query2="""
+                select a.user_id, a.first_name , a.last_name, count(*) as number_of_loans
+                from users a
+                inner join book_loan b on a.user_id=b.user_id
+                inner join book c on b.book_id = c.book_id
+                inner join category_books d on d.book_id = b.book_id
+                inner join category e on d.category_id = e.category_id
+                where a.user_type = 'teacher'
+                and e.category_ID = %s
+                and b.starting_date >= date_sub(current_date(), interval 1 year)
+                group by a.user_id, b.loan_id 
+                order by number_of_loans desc;
+               
+            """
+            
+            values = (temp,)
+            cursor.execute(query2, values)
+            
+            teachers = cursor.fetchall()
+            
+
             connection.commit()
             cursor.close()
-            return render_template("category_authors_teachers.html", authors_category=authors_category)  # μπορει γενικα να μπει και 2ο ορισμα
-
+            return render_template("category_authors_teachers.html", authors_category = authors_category, teachers=teachers ) #μπορει γενικα να μπει και 2ο ορισμα 
+        
         except mysql.connector.Error as error:
             return f"Database Error: {error}"
 
@@ -201,15 +225,16 @@ def query_3_1_2():
         try:
 
             cursor = connection.cursor()
-            query = """select category_ID,category_name from category order by category_ID asc;"""
+            query="""select category_ID,category_name from category order by category_ID asc;"""
             cursor.execute(query)
             category = cursor.fetchall()
             connection.commit()
             cursor.close()
-            # return render_template("test.html",  category=category)
-            return render_template("choose_category.html", category=category)
+            #return render_template("test.html",  category=category)
+            return render_template("choose_category.html",  category=category)
         except mysql.connector.Error as error:
             return f"Database Error: {error}"
+
 
 
 @app.route("/main/admin/query_3_1_3", methods=["GET", "POST"])
