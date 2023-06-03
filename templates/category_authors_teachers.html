@@ -35,9 +35,60 @@
                     </div>
                 {% endif %}
                 </div>
+
+                <!----->    
+
+                <!----->
             </div>
         </div>
     </div>
 </div>
+
+<div class="container">
+    {% include "flash_messages.html" %}
+    <div class="row" id="row">
+        <div class="col-md-12">
+            <div class="card" id="card-container">
+                <div class="card-body" id="card">
+                {% if teachers|length == 0 %}
+                    <h1 style="margin-top: 5rem;">No Loans from Teachers for this Category this year!</h1>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Teacher ID</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Number of Loans in the Last year for this Category</th>
+                                    
+                                    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for teacher in teachers %}
+                                    <tr>
+                                        <td> {{ teacher[0] }} </td>
+                                        <td> {{ teacher[1] }} </td> 
+                                        <td> {{ teacher[2] }} </td>
+                                        <td> {{ teacher[3] }} </td>   
+                                         
+
+                                                                           
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
 
 {% endblock content %}
