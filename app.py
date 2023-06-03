@@ -164,8 +164,40 @@ def main_admin():
 
 @app.route("/main/admin/query_3_1_1", methods=["GET", "POST"])
 def query_3_1_1():
-    # Code for the "Total loans per school" query goes here
-    pass
+        if(request.method == "POST"):
+            try:
+                year = request.form.get('year')
+                month = request.form.get('month')
+                year = '' if year is None else year
+                month = '' if month is None else month
+                print(month)
+                print(year)
+                cursor = connection.cursor()
+                query="""
+                SELECT a.school_id, a.school_name, COALESCE(COUNT(b.loan_ID), 0) AS loan_number
+                FROM school a
+                LEFT JOIN book_loan b ON a.school_id = b.school_id
+                AND YEAR(b.starting_date) like %s
+                AND MONTH(b.starting_date) like %s
+                GROUP BY a.school_id
+                ORDER BY loan_number DESC;
+                """
+                cursor.execute(query, (f'{year}%', f'{month}%'))
+                loans_by_school_year_month = cursor.fetchall()
+                print(loans_by_school_year_month)
+                connection.commit()
+                cursor.close()
+                return render_template("loans_by_school_year_month.html", loans_by_school_year_month=loans_by_school_year_month ) #μπορει γενικα να μπει και 2ο ορισμα 
+            #'%s%'
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+
+        else:
+            try:
+                month_names = list(calendar.month_name)[1:]
+                return render_template("choose_year_month.html", month_names=month_names)
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
 
 @app.route("/main/admin/query_3_1_2", methods=["GET", "POST"])
 def query_3_1_2():
