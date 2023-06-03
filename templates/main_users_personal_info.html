@@ -1,0 +1,47 @@
+{% extends "global.html" %}
+
+{% block content %}
+<div class="container">
+    {% include "messages.html" %}
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card" id="card-container">
+                <div class="card-body" id="card">
+                    <h1>Personal Information</h1>
+                    <form method="POST" action="/main/users/personal_info">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ user_info[1] }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="first_name">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user_info[3] }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="last_name">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user_info[4] }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user_info[5] }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="school_id">School ID</label>
+                            <input type="text" class="form-control" id="school_id" name="school_id" value="{{ user_info[6] }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="date_of_birth">Date of Birth</label>
+                            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ user_info[7] }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
