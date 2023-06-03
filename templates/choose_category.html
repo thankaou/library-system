@@ -15,15 +15,18 @@
                             <thead>
                                 <!------>
                                 <form action="/main/admin/query_3_1_2" method="post">
-                                <select id="category" name="category" multiple class="form-control form-control-lg">
-                                    {% for cat in category %}
-                                    {% if cat[0] == 1 %}
-                                    <option value="{{ cat[0] }}" selected="1" >{{ cat[1] }}</option>
-                                    {% else %}
-                                    <option value="{{ cat[0] }}" >{{ cat[1] }}</option>
-                                    {% endif %}
-                                    {% endfor %}
-                                </select>
+                                    <div class="custom-select-wrapper">
+                                        <select id="category" name="category" class="form-control form-control-lg custom-select">
+                                            {% for cat in category %}
+                                            {% if cat[0] == 1 %}
+                                            <option value="{{ cat[0] }}" selected>{{ cat[1] }}</option>
+                                            {% else %}
+                                            <option value="{{ cat[0] }}">{{ cat[1] }}</option>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                        <span class="custom-select-arrow">&#9662;</span>
+                                    </div>
                                
                                 
 
