@@ -1,0 +1,93 @@
+{% extends "global.html" %}
+
+{% block content %}
+<div class="container">
+    {% include "messages.html" %}
+    <div class="row" id="row">
+        <div class="col-md-12">
+            <div class="card" id="card-container">
+                <div class="card-body" id="card">
+                    <h1>Edit Books Below</h1>
+
+                    <h2>Books</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>ISBN</th>
+                                <th>Title</th>
+                                <th>Language</th>
+                                <th>Abstract</th>
+                                <th>Publisher</th>
+                                <th>Page Number</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for book in books %}
+                            <tr>
+                                <td>{{ book[0] }}</td>
+                                <td>{{ book[1] }}</td>
+                                <td>{{ book[2] }}</td>
+                                <td>{{ book[3] }}</td>
+                                <td>
+                                    <div style="max-height: 100px; overflow-y: auto;">{{ book[4] }}</div>
+                                </td>
+                                <td>{{ book[5] }}</td>
+                                <td>{{ book[6] }}</td>
+                                <td>{{ book[7] }}</td>
+                                <td>
+                                    <form method="POST" action="/main/school_admin/books">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="book_id" value="{{ book[0] }}">
+                                        <input type="submit" value="Delete">
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <h2>Add Book</h2>
+                    <form method="POST" action="/main/school_admin/books">
+                        <input type="hidden" name="action" value="insert">
+                        <label for="ISBN">ISBN:</label>
+                        <input type="text" id="ISBN" name="ISBN" required><br>
+                        <label for="title">Title:</label>
+                        <input type="text" id="title" name="title"><br>
+                        <label for="book_language">Language:</label>
+                        <input type="text" id="book_language" name="book_language"><br>
+                        <label for="abstract">Abstract:</label>
+                        <input type="text" id="abstract" name="abstract" required><br>
+                        <label for="publisher">Publisher:</label>
+                        <input type="text" id="publisher" name="publisher" required><br>
+                        <label for="page_nr">Page Number:</label>
+                        <input type="text" id="page_nr" name="page_nr" required><br>
+                        <input type="submit" value="Add Book">
+                    </form>
+
+                    <h2>Update Book</h2>
+                    <form method="POST" action="/main/school_admin/books">
+                        <input type="hidden" name="action" value="update">
+                        <label for="book_id">Book ID:</label>
+                        <input type="text" id="book_id" name="book_id" required><br>
+                        <label for="ISBN">ISBN:</label>
+                        <input type="text" id="ISBN" name="ISBN" required><br>
+                        <label for="title">Title:</label>
+                        <input type="text" id="title" name="title"><br>
+                        <label for="book_language">Language:</label>
+                        <input type="text" id="book_language" name="book_language"><br>
+                        <label for="abstract">Abstract:</label>
+                        <input type="text" id="abstract" name="abstract" required><br>
+                        <label for="publisher">Publisher:</label>
+                        <input type="text" id="publisher" name="publisher" required><br>
+                        <label for="page_nr">Page Number:</label>
+                        <input type="text" id="page_nr" name="page_nr" required><br>
+                        <input type="submit" value="Update Book">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
