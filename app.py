@@ -14,6 +14,7 @@ def index():
     <div class="container text-center">
         <h1>Welcome to ADOXOS</h1>
         <a href="/login" class="btn btn-primary">Login</a>
+        <a href="/register" class="btn btn-primary">Register</a>
     </div>
     '''
 
@@ -46,63 +47,114 @@ def login():
 
             if user:
                 user_type = user[10]  # Assuming the user_type column is at index 10 in the user tuple
-
-                if user_type in ["student", "teacher"]:
-                    # Redirect students and teachers to the same page
-                    session['user'] = user  # Store the user in the session
-                    return redirect(url_for("main_users"))
-                elif user_type in ["school admin"]:
-                    # Redirect admins and school admins to another page
-                    session['user'] = user  # Store the user in the session
-                    return redirect(url_for("main_school_admin"))
-                elif user_type in ["admin"]:
-                    # Redirect admins and school admins to another page
-                    session['user'] = user  # Store the user in the session
-                    return redirect(url_for("main_admin"))
+                user_status = user[11]
+                if user_status == 'inactive':
+                    flash('Your account has been deactivated.', 'danger')
                 else:
-                    # Unknown user type
-                    return "Unknown User Type"
+                    if user_type in ["student", "teacher"]:
+                        # Redirect students and teachers to the same page
+                        session['user'] = user  # Store the user in the session
+                        return redirect(url_for("main_users"))
+                    elif user_type in ["school admin"]:
+                        # Redirect admins and school admins to another page
+                        session['user'] = user  # Store the user in the session
+                        return redirect(url_for("main_school_admin"))
+                    elif user_type in ["admin"]:
+                        # Redirect admins and school admins to another page
+                        session['user'] = user  # Store the user in the session
+                        return redirect(url_for("main_admin"))
+                    else:
+                        # Unknown user type
+                        return "Unknown User Type"
             else:
-                # User does not exist or incorrect username/password
-                return "Login Failed"
+               flash('Login failed', 'danger')
         except mysql.connector.Error as error:
             # Handle database connection error
             return f"Database Error: {error}"
-        finally:
+        """finally:
             # Close the cursor and database connection
             if 'cursor' in locals():
                 cursor.close()
             if 'connection' in locals():
-                connection.close()
-    """
-    return '''
-    <form method="POST" action="/login">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username"><br><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password"><br><br>
-        <input type="submit" value="Login">
-    </form>
-    '''
-    """
+                connection.close()"""
 
-    return '''
-    <form method="POST" action="/login" style="max-width: 300px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 4px;">
-        <h2 style="text-align: center;">Login</h2>
-        <div style="margin-bottom: 10px;">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" style="width: 100%; padding: 5px;">
-        </div>
-        <div style="margin-bottom: 10px;">
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" style="width: 100%; padding: 5px;">
-        </div>
-        <div style="text-align: center;">
-            <input type="submit" value="Login" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-        </div>
-    </form>
-    '''
+    return render_template("login.html")
 
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    schools = []
+    try:
+        connection = mysql.connector.connect(
+            host='localhost',
+            port='3306',
+            database='library_system_final',
+            user='root',
+            password='Sporar9!'
+        )
+
+        cursor = connection.cursor()
+        query = "SELECT school_name from school"
+        cursor.execute(query)
+        fetched_schools = cursor.fetchall()
+        schools = [school[0] for school in fetched_schools]  # Extract school names from fetched results
+    except mysql.connector.Error as error:
+        # Handle database connection error
+        return f"Database Error: {error}"
+
+    if request.method == "POST":
+        # Retrieve form data
+        username = request.form.get("username")
+        password = request.form.get("password")
+        first_name = request.form.get("first_name")
+        last_name = request.form.get("last_name")
+        email = request.form.get("email")
+        school_name = request.form.get("school")
+        date_of_birth = request.form.get("date_of_birth")
+        user_type = request.form.get("registration_type")
+
+        try:
+            cursor = connection.cursor()
+
+            # Get school_id for the selected school
+            query = "SELECT school_id from school WHERE school_name = %s"
+            values = (school_name,)
+            cursor.execute(query, values)
+            school_id = cursor.fetchone()[0]
+
+            if user_type == "student":
+                available_loans = 2
+                available_reservations = 2
+                query = "INSERT INTO school_user_registration (username, passwrd, first_name, last_name, email, school_id, date_of_birth, available_loans, available_reservations, user_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                values = (username, password, first_name, last_name, email, school_id, date_of_birth, available_loans, available_reservations,user_type)
+                cursor.execute(query, values)
+            elif user_type == "teacher":
+                available_loans = 1
+                available_reservations = 1
+                query = "INSERT INTO school_user_registration (username, passwrd, first_name, last_name, email, school_id, date_of_birth, available_loans, available_reservations, user_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                values = (username, password, first_name, last_name, email, school_id, date_of_birth, available_loans, available_reservations, user_type)
+                cursor.execute(query, values)
+            elif user_type == "school_admin":
+                available_loans = 1
+                available_reservations = 1
+                query = "INSERT INTO school_admin_registration (username, passwrd, first_name, last_name, email, school_id, date_of_birth, available_loans, available_reservations) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                values = (username, password, first_name, last_name, email, school_id, date_of_birth, available_loans, available_reservations)
+                cursor.execute(query, values)
+
+            connection.commit()
+            flash('Your registration form has been received', 'success')
+            return redirect(url_for("login"))
+
+        except mysql.connector.Error as error:
+            # Handle database connection error
+            return f"Database Error: {error}"
+        """finally:
+            # Close the cursor and database connection
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()"""
+
+    return render_template("register.html", schools=schools)
 
 @app.route("/main/admin")
 def main_admin():
@@ -110,38 +162,38 @@ def main_admin():
     return render_template("main_admin.html", first_name=first_name)
 
 
-
 @app.route("/main/admin/query_3_1_1", methods=["GET", "POST"])
 def query_3_1_1():
     # Code for the "Total loans per school" query goes here
     pass
 
+
 @app.route("/main/admin/query_3_1_2", methods=["GET", "POST"])
 def query_3_1_2():
-    #ΔΕΝ ΕΧΕΙ ΤΕΛΕΙΩΣΕΙ
-    if(request.method == "POST"):
+    # ΔΕΝ ΕΧΕΙ ΤΕΛΕΙΩΣΕΙ
+    if (request.method == "POST"):
         try:
             selected_value = request.form.get('category')
-            #return render_template("test.html", selected_value = selected_value)
+            # return render_template("test.html", selected_value = selected_value)
             cursor = connection.cursor()
-            query="""
-                select distinct d.author_name,f.category_name 
-                from book a
-                inner join author_books c on a.book_ID = c.book_ID
-                inner join author d on d.author_ID = c.author_ID
-                inner join category_books e on a.book_ID = e.book_ID
-                inner join category f on f.category_ID = e.category_ID
-                where f.category_ID = %s;
-                
+            query = """
+                   select distinct d.author_name,f.category_name 
+                   from book a
+                   inner join author_books c on a.book_ID = c.book_ID
+                   inner join author d on d.author_ID = c.author_ID
+                   inner join category_books e on a.book_ID = e.book_ID
+                   inner join category f on f.category_ID = e.category_ID
+                   where f.category_ID = %s;
 
-                """
+
+                   """
             values = (selected_value,)
             cursor.execute(query, values)
             authors_category = cursor.fetchall()
             connection.commit()
             cursor.close()
-            return render_template("category_authors_teachers.html", authors_category = authors_category) #μπορει γενικα να μπει και 2ο ορισμα 
-        
+            return render_template("category_authors_teachers.html", authors_category=authors_category)  # μπορει γενικα να μπει και 2ο ορισμα
+
         except mysql.connector.Error as error:
             return f"Database Error: {error}"
 
@@ -149,16 +201,15 @@ def query_3_1_2():
         try:
 
             cursor = connection.cursor()
-            query="""select category_ID,category_name from category order by category_ID asc;"""
+            query = """select category_ID,category_name from category order by category_ID asc;"""
             cursor.execute(query)
             category = cursor.fetchall()
             connection.commit()
             cursor.close()
-            #return render_template("test.html",  category=category)
-            return render_template("choose_category.html",  category=category)
+            # return render_template("test.html",  category=category)
+            return render_template("choose_category.html", category=category)
         except mysql.connector.Error as error:
             return f"Database Error: {error}"
-
 
 
 @app.route("/main/admin/query_3_1_3", methods=["GET", "POST"])
@@ -166,31 +217,32 @@ def query_3_1_3():
     # Code for the "Loans from young teachers" query goes here
     try:
         cursor = connection.cursor()
-        query="""
-        select a.user_id,a.first_name, a.last_name, count(*) as loan_number
-        from users a
-        inner join book_loan b on a.user_id = b.user_id 
-        where a.user_type = 'teacher'
-        and  (date_format(from_days(datediff(now(),a.date_of_birth)), '%Y')  + 0 ) < 40
-        group by a.user_id,a.first_name, a.last_name
-        order by loan_number desc;"""
+        query = """
+            select a.user_id,a.first_name, a.last_name, count(*) as loan_number
+            from users a
+            inner join book_loan b on a.user_id = b.user_id 
+            where a.user_type = 'teacher'
+            and  (date_format(from_days(datediff(now(),a.date_of_birth)), '%Y')  + 0 ) < 40
+            group by a.user_id,a.first_name, a.last_name
+            order by loan_number desc;"""
 
         cursor.execute(query)
         teachers_under_fourty = cursor.fetchall()
         connection.commit()
         cursor.close()
-        return render_template("teachers_under_fourty.html", teachers_under_fourty = teachers_under_fourty)
+        return render_template("teachers_under_fourty.html", teachers_under_fourty=teachers_under_fourty)
 
-    
+
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
+
 
 @app.route("/main/admin/query_3_1_4", methods=["GET", "POST"])
 def query_3_1_4():
     # Code for the "Authors without a lent book" query goes here
     try:
         cursor = connection.cursor()
-        query="""
+        query = """
             select distinct a.author_ID, a.author_name 
             from author a 
             inner join author_books b on a.author_ID = b.author_ID
@@ -203,17 +255,18 @@ def query_3_1_4():
         authors_no_loan = cursor.fetchall()
         connection.commit()
         cursor.close()
-        return render_template("authors_no_loan.html", authors_no_loan = authors_no_loan)
+        return render_template("authors_no_loan.html", authors_no_loan=authors_no_loan)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
+
 
 @app.route("/main/admin/query_3_1_5", methods=["GET", "POST"])
 def query_3_1_5():
     # Code for the "School admin pairs with same # of loans made (20+ loans)" query goes here
-        # Code for the "Authors without a lent book" query goes here
+    # Code for the "Authors without a lent book" query goes here
     try:
         cursor = connection.cursor()
-        query="""
+        query = """
             select distinct a1.school_admin, a1.loan_count
             from (
                 select a.school_admin, count(*) as loan_count
@@ -237,42 +290,44 @@ def query_3_1_5():
         hyperactive_operators = cursor.fetchall()
         connection.commit()
         cursor.close()
-        return render_template("hyperactive_operators.html", hyperactive_operators = hyperactive_operators)
+        return render_template("hyperactive_operators.html", hyperactive_operators=hyperactive_operators)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
+
 
 @app.route("/main/admin/query_3_1_6", methods=["GET", "POST"])
 def query_3_1_6():
     # Code for the "Most popular book category pairs" query goes here
     try:
         cursor = connection.cursor()
-        query="""
-            select distinct c1.category_name, c2.category_name, count(*) as loan_count
-            from book_loan bl
-            join book b on bl.book_id = b.book_id
-            join category_books cb1 on b.book_id = cb1.book_id
-            join category_books cb2 on b.book_id = cb2.book_id
-            join category c1 on cb1.category_id = c1.category_id
-            join category c2 on cb2.category_id = c2.category_id
-            where c1.category_name < c2.category_name /*distinct pairs*/
-            group by c1.category_name, c2.category_name
-            order by loan_count desc
-            limit 3;
+        query = """
+                select distinct c1.category_name, c2.category_name, count(*) as loan_count
+                from book_loan bl
+                join book b on bl.book_id = b.book_id
+                join category_books cb1 on b.book_id = cb1.book_id
+                join category_books cb2 on b.book_id = cb2.book_id
+                join category c1 on cb1.category_id = c1.category_id
+                join category c2 on cb2.category_id = c2.category_id
+                where c1.category_name < c2.category_name /*distinct pairs*/
+                group by c1.category_name, c2.category_name
+                order by loan_count desc
+                limit 3;
 
-        """
+            """
         cursor.execute(query)
         top_three = cursor.fetchall()
         connection.commit()
         cursor.close()
-        return render_template("top_three.html",top_three = top_three)
+        return render_template("top_three.html", top_three=top_three)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
-    
+
+
 @app.route("/main/admin/query_3_1_7", methods=["GET", "POST"])
 def query_3_1_7():
     try:
         cursor = connection.cursor()
-        query="""
+        query = """
             SELECT distinct a.author_name,  a.author_ID
             FROM author a
             INNER JOIN author_books b ON a.author_ID = b.author_ID
@@ -296,12 +351,9 @@ def query_3_1_7():
         inactive_authors = cursor.fetchall()
         connection.commit()
         cursor.close()
-        return render_template("inactive_authors.html", inactive_authors = inactive_authors)
+        return render_template("inactive_authors.html", inactive_authors=inactive_authors)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
-    
-
-
 
 
 @app.route("/main/admin/school", methods=["GET", "POST"])
