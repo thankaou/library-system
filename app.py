@@ -886,17 +886,15 @@ def main_users_personal_info():
         try:
             cursor = connection.cursor()
             cursor.execute(
-                "SELECT username, first_name, last_name, email, school_id, date_of_birth "
-                "FROM users "
-                "WHERE user_id = %s",
-                (user_id,)
+                "SELECT * FROM users WHERE user_id = %s",
+            (user_id,)
             )
-            personal_info = cursor.fetchone()
+            user_info = cursor.fetchone()
             cursor.close()
         except mysql.connector.Error as error:
             return f"Database Error: {error}"
 
-        return render_template("main_users_personal_info.html", personal_info=personal_info)
+        return render_template("main_users_personal_info.html", user_info=user_info)
 
     if request.method == "POST":
         # Handle form submission
