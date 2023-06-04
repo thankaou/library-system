@@ -1,0 +1,34 @@
+{% extends "global_layout.html" %}
+{% block content %}
+<div class="container">
+    {% include "flash_messages.html" %}
+    <div class="row" id="row">
+        <div class="col-md-12">
+            <div class="card" id="card-container">
+                <div class="card-body" id="card">
+                    <h1 style="margin-top: 5rem;">Choose  Year</h1>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <td>
+                                        <form action="/main/admin/query_3_1_5" method="post">
+                                            <div class="form-group">
+                                                <label for="year">Year:</label>
+                                                <input type="text" id="year" name="year" class="form-control form-control-lg" pattern="[0-9]{4}" placeholder="Enter a valid year" required>
+                                            </div>
+                                            <div style="margin-top: 20px;">
+                                                <button class="btn btn-primary btn-submit-custom" type="submit">Submit</button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
