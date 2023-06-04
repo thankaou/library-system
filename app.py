@@ -165,51 +165,52 @@ def main_admin():
 
 @app.route("/main/admin/query_3_1_1", methods=["GET", "POST"])
 def query_3_1_1():
-        if(request.method == "POST"):
-            try:
-                year = request.form.get('year')
-                month = request.form.get('month')
-                year = '' if year is None else year
-                month = '' if month is None else month
-                print(month)
-                print(year)
-                cursor = connection.cursor()
-                query="""
-                SELECT a.school_id, a.school_name, COALESCE(COUNT(b.loan_ID), 0) AS loan_number
-                FROM school a
-                LEFT JOIN book_loan b ON a.school_id = b.school_id
-                AND YEAR(b.starting_date) like %s
-                AND MONTH(b.starting_date) like %s
-                GROUP BY a.school_id
-                ORDER BY loan_number DESC;
-                """
-                cursor.execute(query, (f'{year}%', f'{month}%'))
-                loans_by_school_year_month = cursor.fetchall()
-                print(loans_by_school_year_month)
-                connection.commit()
-                cursor.close()
-                return render_template("loans_by_school_year_month.html", loans_by_school_year_month=loans_by_school_year_month ) #μπορει γενικα να μπει και 2ο ορισμα 
-            #'%s%'
-            except mysql.connector.Error as error:
-                return f"Database Error: {error}"
+    if (request.method == "POST"):
+        try:
+            year = request.form.get('year')
+            month = request.form.get('month')
+            year = '' if year is None else year
+            month = '' if month is None else month
+            print(month)
+            print(year)
+            cursor = connection.cursor()
+            query = """
+                    SELECT a.school_id, a.school_name, COALESCE(COUNT(b.loan_ID), 0) AS loan_number
+                    FROM school a
+                    LEFT JOIN book_loan b ON a.school_id = b.school_id
+                    AND YEAR(b.starting_date) like %s
+                    AND MONTH(b.starting_date) like %s
+                    GROUP BY a.school_id
+                    ORDER BY loan_number DESC;
+                    """
+            cursor.execute(query, (f'{year}%', f'{month}%'))
+            loans_by_school_year_month = cursor.fetchall()
+            print(loans_by_school_year_month)
+            connection.commit()
+            cursor.close()
+            return render_template("loans_by_school_year_month.html",
+                                   loans_by_school_year_month=loans_by_school_year_month)  # μπορει γενικα να μπει και 2ο ορισμα
+        # '%s%'
+        except mysql.connector.Error as error:
+            return f"Database Error: {error}"
 
-        else:
-            try:
-                month_names = list(calendar.month_name)[1:]
-                return render_template("choose_year_month.html", month_names=month_names)
-            except mysql.connector.Error as error:
-                return f"Database Error: {error}"
+    else:
+        try:
+            month_names = list(calendar.month_name)[1:]
+            return render_template("choose_year_month.html", month_names=month_names)
+        except mysql.connector.Error as error:
+            return f"Database Error: {error}"
+
 
 @app.route("/main/admin/query_3_1_2", methods=["GET", "POST"])
 def query_3_1_2():
-    
-    if(request.method == "POST"):
+    if (request.method == "POST"):
         try:
             selected_value = request.form.get('category')
             temp = selected_value
-            #return render_template("test.html", selected_value = selected_value)
+            # return render_template("test.html", selected_value = selected_value)
             cursor = connection.cursor()
-            query="""
+            query = """
                 select distinct d.author_name,f.category_name 
                 from book a
                 inner join author_books c on a.book_ID = c.book_ID
@@ -217,16 +218,14 @@ def query_3_1_2():
                 inner join category_books e on a.book_ID = e.book_ID
                 inner join category f on f.category_ID = e.category_ID
                 where f.category_ID = %s;
-                
+
 
                 """
             values = (selected_value,)
             cursor.execute(query, values)
             authors_category = cursor.fetchall()
-            
-            
-            
-            query2="""
+
+            query2 = """
                 select a.user_id, a.first_name , a.last_name, count(*) as number_of_loans
                 from users a
                 inner join book_loan b on a.user_id=b.user_id
@@ -238,19 +237,19 @@ def query_3_1_2():
                 and b.starting_date >= date_sub(current_date(), interval 1 year)
                 group by a.user_id, b.loan_id 
                 order by number_of_loans desc;
-               
+
             """
-            
+
             values = (temp,)
             cursor.execute(query2, values)
-            
+
             teachers = cursor.fetchall()
-            
 
             connection.commit()
             cursor.close()
-            return render_template("category_authors_teachers.html", authors_category = authors_category, teachers=teachers ) #μπορει γενικα να μπει και 2ο ορισμα 
-        
+            return render_template("category_authors_teachers.html", authors_category=authors_category,
+                                   teachers=teachers)  # μπορει γενικα να μπει και 2ο ορισμα
+
         except mysql.connector.Error as error:
             return f"Database Error: {error}"
 
@@ -258,16 +257,15 @@ def query_3_1_2():
         try:
 
             cursor = connection.cursor()
-            query="""select category_ID,category_name from category order by category_ID asc;"""
+            query = """select category_ID,category_name from category order by category_ID asc;"""
             cursor.execute(query)
             category = cursor.fetchall()
             connection.commit()
             cursor.close()
-            #return render_template("test.html",  category=category)
-            return render_template("choose_category.html",  category=category)
+            # return render_template("test.html",  category=category)
+            return render_template("choose_category.html", category=category)
         except mysql.connector.Error as error:
             return f"Database Error: {error}"
-
 
 
 @app.route("/main/admin/query_3_1_3", methods=["GET", "POST"])
@@ -648,6 +646,67 @@ def main_school_admin_books():
         return f"Database Error: {error}"
 
 
+@app.route("/main/school_admin/users", methods=["GET", "POST"])
+def main_school_admin_users():
+    if 'user' not in session:
+        return redirect(url_for("login"))
+
+    user_id = session['user'][0]
+    school_id = session['user'][6]
+
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "activate":
+            user_id = request.form.get("user_id")
+            try:
+                cursor = connection.cursor()
+                cursor.execute("UPDATE users SET user_status = 'active' WHERE user_id = %s", (user_id,))
+                connection.commit()
+                cursor.close()
+                flash('User activated.', 'success')
+                return redirect(url_for("main_school_admin_users"))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+
+        elif action == "deactivate":
+            user_id = request.form.get("user_id")
+            try:
+                cursor = connection.cursor()
+                cursor.execute("UPDATE users SET user_status = 'inactive' WHERE user_id = %s", (user_id,))
+                connection.commit()
+                cursor.close()
+                flash('User deactivated.', 'success')
+                return redirect(url_for("main_school_admin_users"))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+        elif action == "delete":
+            user_id = request.form.get("user_id")
+            try:
+                cursor = connection.cursor()
+                cursor.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
+                connection.commit()
+                cursor.close()
+                flash('User deleted.', 'success')
+                return redirect(url_for("main_school_admin_users"))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+    try:
+        cursor = connection.cursor()
+        cursor.execute(
+            "SELECT user_id, username, first_name, last_name, email, date_of_birth, user_type, book_loans, book_reservations, has_overdue_books FROM users WHERE school_id = %s AND user_status = 'active'",
+            (school_id,))
+        active_users = cursor.fetchall()
+
+        cursor.execute(
+            "SELECT user_id, username, first_name, last_name, email, date_of_birth, user_type, book_loans, book_reservations, has_overdue_books FROM users WHERE school_id = %s AND user_status = 'inactive'",
+            (school_id,))
+        inactive_users = cursor.fetchall()
+
+        cursor.close()
+        return render_template("main_school_admin_users.html", active_users=active_users, inactive_users=inactive_users)
+    except mysql.connector.Error as error:
+        return f"Database Error: {error}"
+
 @app.route("/main/school_admin/registrations", methods=["GET", "POST"])
 def accept_user_registration():
     if 'user' not in session:
@@ -716,8 +775,6 @@ def accept_user_registration():
         return render_template("user_registrations.html", registrations=registrations)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
-
-
 
 @app.route("/main/school_admin/library", methods=["GET", "POST"])
 def main_school_admin_library():
@@ -964,14 +1021,28 @@ def main_school_admin_library():
             # Add a new loan
             book_id = request.form.get('book_id')
             user_id = request.form.get('user_id')
+            cursor = connection.cursor()
+            cursor.execute("SELECT book_loans FROM users WHERE user_id = %s", (user_id,))
+            loans_before = cursor.fetchone()[0]
+            cursor.execute(
+                "SELECT book_id FROM book_loan WHERE user_id = %s AND loan_status IN ('overdue', 'in_progress')",
+                (user_id,))
+            loaned_book_ids = [book[0] for book in cursor.fetchall()]
             try:
-                cursor = connection.cursor()
-                cursor.callproc('physical_loan', [book_id, user_id])
-                connection.commit()
-                cursor.close()
-
-                flash('Loan added.', 'success')
-                return redirect(url_for('main_school_admin_library'))
+                if int(book_id) in loaned_book_ids:
+                    flash('This user is lending the same book right now.', 'danger')
+                else:
+                    cursor = connection.cursor()
+                    cursor.callproc('physical_loan', [book_id, user_id])
+                    cursor.execute("SELECT book_loans FROM users WHERE user_id = %s", (user_id,))
+                    loans_after = cursor.fetchone()[0]
+                    connection.commit()
+                    cursor.close()
+                    if loans_after != loans_before:
+                        flash('Loan added.', 'success')
+                        return redirect(url_for('main_school_admin_library'))
+                    else:
+                        flash('Cannot make this loan. Make sure this book is available and the user is eligible to loan another book', 'danger')
             except mysql.connector.Error as error:
                 return f"Database Error: {error}"
 
@@ -1022,6 +1093,74 @@ def main_school_admin_library():
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
 
+
+@app.route("/main/school_admin/reviews", methods=["GET", "POST"])
+def main_school_admin_reviews():
+    if 'user' not in session:
+        return redirect(url_for("login"))
+
+    user_id = session['user'][0]
+    school_id = session['user'][6]
+
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "verify":
+            review_id = request.form.get("review_id")
+            try:
+                cursor = connection.cursor()
+                cursor.execute("UPDATE book_review SET verification = 'verified' WHERE review_id = %s", (review_id,))
+                connection.commit()
+                cursor.close()
+                flash('Review verified.', 'success')
+                return redirect(url_for("main_school_admin_reviews"))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT br.review_id, br.book_id, b.title, br.user_id, u.first_name, u.last_name, br.loan_ID, br.rating, br.review, br.verification
+            FROM book_review br
+            JOIN users u ON br.user_id = u.user_id
+            JOIN book b ON br.book_id = b.book_id
+            JOIN category_books cb ON b.book_id = cb.book_id
+            JOIN category c ON cb.category_ID = c.category_ID
+            WHERE u.school_id = %s AND br.verification = 'not_verified'
+            UNION
+            SELECT br.review_id, br.book_id, b.title, br.user_id, u.first_name, u.last_name, br.loan_ID, br.rating, br.review, br.verification
+            FROM book_review br
+            JOIN users u ON br.user_id = u.user_id
+            JOIN book b ON br.book_id = b.book_id
+            JOIN category_books cb ON b.book_id = cb.book_id
+            JOIN category c ON cb.category_ID = c.category_ID
+            WHERE u.school_id = %s AND br.verification = 'verified'
+        """, (school_id, school_id))
+        reviews = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT c.category_name, AVG(br.rating)
+            FROM book_review br
+            JOIN book b ON br.book_id = b.book_id
+            JOIN category_books cb ON b.book_id = cb.book_id
+            JOIN category c ON cb.category_ID = c.category_ID
+            WHERE br.verification = 'verified'
+            GROUP BY c.category_name
+        """)
+        category_averages = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT u.user_id, u.first_name, u.last_name, AVG(br.rating)
+            FROM book_review br
+            JOIN users u ON br.user_id = u.user_id
+            WHERE br.verification = 'verified'
+            GROUP BY u.user_id, u.first_name, u.last_name
+        """)
+        user_averages = cursor.fetchall()
+
+        cursor.close()
+        return render_template("main_school_admin_reviews.html", reviews=reviews, category_averages=category_averages, user_averages=user_averages)
+    except mysql.connector.Error as error:
+        return f"Database Error: {error}"
 
 @app.route("/main/school_admin/queries", methods=["GET", "POST"])
 def main_school_admin_queries():
@@ -1074,7 +1213,7 @@ def main_users_library():
                     "SELECT book_id FROM book_loan WHERE user_id = %s AND loan_status IN ('overdue', 'in_progress')",
                     (user_id,))
                 loaned_book_ids = [book[0] for book in cursor.fetchall()]
-                print(reservations)
+
                 if int(book_id) in loaned_book_ids:
                     flash('You already have a loan for this book.', 'danger')
                 elif int(book_id) in reservations:
@@ -1140,16 +1279,21 @@ def main_users_library_reviews():
         user_id = session['user'][0]
         try:
             cursor = connection.cursor()
+            cursor.execute("SELECT loan_id FROM book_review WHERE user_id = %s AND book_id = %s", (user_id, book_id))
+            same_loan = [loan[0] for loan in cursor.fetchall()]
+            if int(loan_id) in same_loan:
+                flash('You have already submitted a review for this loan.', 'danger')
+            else:
+                query = """
+                    INSERT INTO book_review (book_id, user_id, loan_id, rating, review)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """
+                values = (book_id, user_id, loan_id, rating, review)
+                cursor.execute(query, values)
+                connection.commit()
+                flash('Review submitted.', 'success')
 
-            query = """
-                INSERT INTO book_review (book_id, user_id, loan_id, rating, review)
-                VALUES (%s, %s, %s, %s, %s)
-                """
-            values = (book_id, user_id, loan_id, rating, review)
-            cursor.execute(query, values)
-            connection.commit()
-
-            return redirect(url_for("main_users_library_reviews"))
+            return redirect(url_for("main_users_library"))
 
         except mysql.connector.Error as error:
             # Handle database connection error
