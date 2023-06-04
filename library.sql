@@ -11,10 +11,8 @@ school_phone_number varchar(30) not null unique,
 school_email varchar(100) not null unique,
 school_principal varchar(100) not null,
 school_admin varchar(100) not null,
-loan_underway enum('0','1') default '0', /*ΔΕΝ ΧΡΕΙΑΖΕΤΑΙ ΝΑ ΔΙΑΓΡΑΦΕΙ*/
 unique (school_name),
 primary key(school_id)
-/*να δουμε αν θελει foreign key*/
 );
 
 create table if not exists users(
@@ -32,13 +30,14 @@ user_type enum('student', 'teacher', 'admin','school admin') not null,
 user_status enum('active', 'inactive') default 'active',
 book_loans int default '0',
 book_reservations int default '0',
-has_overdue_books enum('yes', 'no') default 'no', /*δεν ξερω αν χρειαζεται*/
-/*να ελεγξω τι γινεται κατα την εισαγωγη αν δεν εινια κατι */
+has_overdue_books enum('yes', 'no') default 'no', 
 unique(username) ,
 primary key(user_id),
 constraint fk_users_school_id foreign key (school_id) 
    references school(school_id) on delete cascade on update cascade
 );
+
+create index index_user_type ON users (user_type);
 
 create table if not exists book(
 book_id int not null auto_increment,
@@ -54,12 +53,16 @@ unique(ISBN),
 primary key (book_id),
 constraint valid_ISBN check(ISBN regexp '^97[89][-][0-9]{10}$')
 );
-/*NA ΡΩΤΗΣΩ , θελει οπου εχει το ISBN το constraint?*/
+
+create index index_book_title ON book (title);
+
 create table if not exists author(
 author_ID int not null auto_increment,
 author_name varchar(70) not null unique,
 primary key(author_ID)
 );
+
+create index index_author_name ON author (author_name);
 
 create table if not exists author_books(
 author_ID int not null,
@@ -76,7 +79,7 @@ category_ID int not null auto_increment,
 category_name varchar(70) not null unique,
 primary key(category_ID)
 );
-
+create index index_category_name ON category (category_name);
 create table if not exists category_books(
 category_ID int ,
 book_id int ,
@@ -111,8 +114,6 @@ book_id int not null,
 number_of_copies int unsigned default 0,
 number_of_reservations int unsigned default 0,
 total_copies int unsigned default 0,
-/* να βαλω αλλο πεδιο που να αρχικοποιειται σε 0 αν εισαγεται βιβλιο?*/
-/*να δω αν εχει νοημα ως αρνητικο*/
 primary key(school_lib_id),
 unique(school_id,book_id),
 constraint copies_not_negative check(number_of_copies >= 0),
@@ -121,7 +122,6 @@ constraint fk_school_library_book foreign key (book_id)
 constraint fk_school_school_id foreign key (school_id) 
 	references school(school_id) on delete cascade on update cascade
 );
-/*to school name na ginei int!!!*/
 
 
 create table if not exists reservation(
@@ -137,9 +137,7 @@ constraint fk_reservation_users foreign key (user_id)
 	references users(user_id) on delete cascade on update cascade,
 constraint fk_reservation_school_library  foreign key (school_id,book_id) 
 	references school_library(school_id,book_id) on delete cascade on update cascade
-/*να δω αν θελει και τελους-by default*/
-/*να ρωτησω για το foreign key στο αλλο που εχει 2 για primary key*/
-/*ελεγχος ημερομηνιας παραλαβης <ημερομηνια παραδοσης */
+
 );
 
 
@@ -157,9 +155,7 @@ constraint fk_book_loan_users foreign key (user_id)
 	references users(user_id) on delete cascade on update cascade,
 constraint fk_book_loan_school_library foreign key (school_id ,book_id) 
 	references school_library(school_id,book_id ) on delete cascade on update cascade
-/*να δω αν θελει και τελους-by default*/
-/*να ρωτησω για το foreign key στο αλλο που εχει 2 για primary key*/
-/*ελεγχος ημερομηνιας παραλαβης <ημερομηνια παραδοσης */
+
 );
 
 create table if not exists book_review(
@@ -179,7 +175,7 @@ constraint fk_book_review_book foreign key (book_id)
 constraint fk_book_review_users foreign key (user_id) 
 	references users(user_id) on delete cascade on update cascade
 );
-/*isws polla h na ginetai overwrite na dw an to update kanei insert*/
+
 create table if not exists school_admin_registration(
 admin_reg_id int not null auto_increment,
 username varchar(50) not null,
@@ -216,5 +212,4 @@ unique(username) ,
 constraint fk_user_registration_school_id  foreign key (school_id) 
    references school(school_id) on delete cascade on update cascade
 );
-/*na dw an doulevei to constraint*/
-/*constraint check_username check(username not in (select username from users)), DE DOULEUEI AKOMA*/
+
