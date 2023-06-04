@@ -1173,7 +1173,95 @@ def main_school_admin_reviews():
 
 @app.route("/main/school_admin/queries", methods=["GET", "POST"])
 def main_school_admin_queries():
-    return 0
+        print(session)
+        school_id = session['user'][6]
+        print(school_id)
+
+        if(request.method == "POST"):
+            try:
+                category = request.form.get("category") #το id
+                category = "" if category is None or category.strip() == "" else category
+
+                
+
+                author = request.form.get("author")  #το id
+                author = "" if author is None or author.strip() == "" else author
+
+                title = request.form.get("title")   #το title
+                title = "" if title is None or title.strip() == "" else title
+                
+                nr_copies = request.form.get("nr_copies")   #το title
+                nr_copies = 0 if nr_copies is None or nr_copies.strip() == "" else nr_copies
+
+                print(category)
+                print(author)
+                print(title)
+                print(nr_copies)
+
+                cursor = connection.cursor()
+                # Get the books in the user's school library
+                #NA ELEGXW GIA DISTINCT B* 
+                query="""
+                    SELECT DISTINCT sl.book_id, b.title, authors.author_names, sl.number_of_copies
+                    FROM school_library AS sl
+                    INNER JOIN book b ON sl.book_id = b.book_id
+                    INNER JOIN category_books c ON c.book_id = sl.book_id
+                    INNER JOIN (
+                        SELECT d.book_id, GROUP_CONCAT(e.author_name SEPARATOR ', ') AS author_names
+                        FROM author_books d
+                        INNER JOIN author e ON e.author_ID = d.author_ID
+                        GROUP BY d.book_id
+                    ) AS authors ON authors.book_id = sl.book_id
+                    WHERE c.category_ID LIKE %s
+                    AND authors.author_names LIKE %s
+                    AND b.title LIKE %s
+                    AND sl.number_of_copies >= %s
+                    AND sl.school_id = %s
+
+                    """
+                cursor.execute(query, (f'{category}%', f'%{author}%', f'{title}%',nr_copies, school_id))
+                print(f'%{author}%')
+                books_filtered_admin = cursor.fetchall()
+                print(books_filtered_admin)
+                #μπορω να κανω redirect με 
+
+                connection.commit()
+                cursor.close()
+                return render_template("books_filtered_admin.html", books_filtered_admin = books_filtered_admin )
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+            
+            #εδω το if method= Post + to ;θερυ που θα καθορισει τα books
+        else:
+            try:
+                school_id = session['user'][6]
+                cursor = connection.cursor()
+                    # Get the books in the user's school library
+                cursor.execute(
+                        "select distinct f.category_ID,f.category_name  "
+                        "from school_library a "
+                        "inner join category_books e on a.book_ID = e.book_ID "
+                        "inner join category f on f.category_ID = e.category_ID "
+                        "where a.school_id = %s",
+                        (school_id,))
+                categories = cursor.fetchall()
+
+                cursor.execute(
+                        "select distinct d.author_ID, d.author_name "
+                        "from school_library a "
+                        "inner join author_books c on a.book_ID = c.book_ID "
+                        "inner join author d on d.author_ID = c.author_ID "
+                        "where a.school_id = %s",
+                        (school_id,))
+                authors = cursor.fetchall()
+
+                cursor.close()
+                try:
+                    return render_template("filter_by_admin.html", categories = categories, authors = authors )
+                except mysql.connector.Error as error:
+                    return f"Database Error: {error}"
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
 
 
 @app.route("/main/users")
