@@ -148,12 +148,12 @@ def register():
         except mysql.connector.Error as error:
             # Handle database connection error
             return f"Database Error: {error}"
-        """finally:
+        finally:
             # Close the cursor and database connection
             if cursor:
                 cursor.close()
             if connection:
-                connection.close()"""
+                connection.close()
 
     return render_template("register.html", schools=schools)
 
@@ -1361,100 +1361,9 @@ def main_users_personal_info():
         return f"Database Error: {error}"
 
 
-
-@app.route("/main/users/queries", methods=["GET", "POST"])
+@app.route("/main/users/queries")
 def main_users_queries():
-    user_id = session['user'][0]
-    school_id = session['user'][6]
-    if(request.method == "POST"):
-        try:
-            category = request.form.get("category") #το id
-            category = "" if category is None or category.strip() == "" else category
-
-            
-
-            author = request.form.get("author")  #το id
-            author = "" if author is None or author.strip() == "" else author
-
-            title = request.form.get("title")   #το title
-            title = "" if title is None or title.strip() == "" else title
-            
-            print(category)
-            print(author)
-            print(title)
-
-            cursor = connection.cursor()
-            # Get the books in the user's school library
-            #NA ELEGXW GIA DISTINCT B* 
-            query="""
-                select distinct sl.school_lib_id, sl.book_id, sl.number_of_copies, b.title
-                from school_library as sl
-                inner join book b on sl.book_id = b.book_id
-                inner join category_books c on c.book_id = sl.book_id
-                inner join author_books d on d.book_id = sl.book_id
-                where c.category_ID like %s
-                and d.author_ID like %s
-                and b.title like %s
-                and sl.school_id = %s
-                """
-            cursor.execute(query, (f'{category}%', f'{author}%', f'{title}%', school_id))
-            books = cursor.fetchall()
-            print(books)
-            
-
-            # Get the user's loans
-            cursor.execute(
-                "SELECT l.loan_ID, l.book_id, l.starting_date, l.end_date, l.loan_status, b.title "
-                "FROM book_loan AS l "
-                "JOIN book AS b ON l.book_id = b.book_id "
-                "WHERE l.user_id = %s",
-                (user_id,))
-            loans = cursor.fetchall()
-
-            # Get the user's reservations
-            cursor.execute(
-                "SELECT r.reservation_ID, r.book_id, b.title, r.reservation_status "
-                "FROM reservation AS r "
-                "JOIN book AS b ON r.book_id = b.book_id "
-                "WHERE r.user_id = %s",
-                (user_id,))
-            reservations = cursor.fetchall()
-
-            #μπορω να κανω redirect με 
-
-            cursor.close()
-            return render_template("main_users_library.html", books=books, loans=loans, reservations=reservations)
-        except mysql.connector.Error as error:
-            return f"Database Error: {error}"
-        
-        #εδω το if method= Post + to ;θερυ που θα καθορισει τα books
-    else:
-        try:
-            
-            cursor = connection.cursor()
-                # Get the books in the user's school library
-            cursor.execute(
-                    "select distinct f.category_ID,f.category_name  "
-                    "from school_library a "
-                    "inner join category_books e on a.book_ID = e.book_ID "
-                    "inner join category f on f.category_ID = e.category_ID "
-                    "where a.school_id = %s",
-                    (school_id,))
-            categories = cursor.fetchall()
-
-            cursor.execute(
-                    "select distinct d.author_ID, d.author_name "
-                    "from school_library a "
-                    "inner join author_books c on a.book_ID = c.book_ID "
-                    "inner join author d on d.author_ID = c.author_ID "
-                    "where a.school_id = %s",
-                    (school_id,))
-            authors = cursor.fetchall()
-
-            cursor.close()
-            return render_template("filter_by.html", categories = categories, authors=authors )
-        except mysql.connector.Error as error:
-            return f"Database Error: {error}"
+    return 0;
 
 
 if __name__ == "__main__":
