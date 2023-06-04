@@ -397,6 +397,7 @@ def query_3_1_5():
             except mysql.connector.Error as error:
                 return f"Database Error: {error}"
 
+
 @app.route("/main/admin/query_3_1_6", methods=["GET", "POST"])
 def query_3_1_6():
     # Code for the "Most popular book category pairs" query goes here
