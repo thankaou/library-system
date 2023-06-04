@@ -1,6 +1,7 @@
 from flask import Flask, request, redirect, url_for, session, render_template, flash
 import mysql.connector
 import calendar
+import subprocess
 
 app = Flask(__name__)
 app.secret_key = 'axamparos'  # Set a secret key for session encryption
@@ -72,12 +73,12 @@ def login():
         except mysql.connector.Error as error:
             # Handle database connection error
             return f"Database Error: {error}"
-        """finally:
+        finally:
             # Close the cursor and database connection
             if 'cursor' in locals():
                 cursor.close()
             if 'connection' in locals():
-                connection.close()"""
+                connection.close()
 
     return render_template("login.html")
 
@@ -157,9 +158,45 @@ def register():
 
     return render_template("register.html", schools=schools)
 
-@app.route("/main/admin")
+@app.route("/main/admin", methods=["GET", "POST"])
 def main_admin():
     first_name = session['user'][3]
+    backup_file_path = r"C:\Users\ksofr\OneDrive\Υπολογιστής\backup.sql"
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "backup":
+            try:
+                # Use subprocess to run the mysqldump command
+                subprocess.run(
+                    [
+                        "mysqldump",
+                        "--user=root",
+                        "--password=Sporar9!",
+                        "--host=localhost",
+                        "--port=3306",
+                        "library_system_final",
+                        f"> {backup_file_path}"
+                    ],
+                    shell=True
+                )
+                flash('Backup Successful.', 'success')
+                return redirect(url_for("main_admin"))
+            except subprocess.CalledProcessError as error:
+                return f"Error during backup: {error}"
+
+        elif action == "restore":
+            try:
+                cursor = connection.cursor()
+                with open(backup_file_path, "r") as backup_file:
+                    sql_statements = backup_file.read()
+                cursor.execute(sql_statements)
+                connection.commit()
+                cursor.close()
+                flash('Restore Successful.', 'success')
+                return redirect(url_for("main_admin"))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+
     return render_template("main_admin.html", first_name=first_name)
 
 
@@ -1026,6 +1063,7 @@ def main_school_admin_library():
                 return redirect(url_for('main_school_admin_library'))
             except mysql.connector.Error as error:
                 return f"Database Error: {error}"
+
         elif action == 'add_loan':
             # Add a new loan
             book_id = request.form.get('book_id')
@@ -1033,13 +1071,20 @@ def main_school_admin_library():
             cursor = connection.cursor()
             cursor.execute("SELECT book_loans FROM users WHERE user_id = %s", (user_id,))
             loans_before = cursor.fetchone()[0]
-            cursor.execute(
-                "SELECT book_id FROM book_loan WHERE user_id = %s AND loan_status IN ('overdue', 'in_progress')",
-                (user_id,))
             loaned_book_ids = [book[0] for book in cursor.fetchall()]
+            cursor.execute(
+                "SELECT book_id FROM reservation WHERE user_id = %s",
+                (user_id,))
+            reserved_book_ids = [book[0] for book in cursor.fetchall()]
+
+            if int(book_id) in loaned_book_ids:
+                flash('You already have a loan for this book.', 'danger')
             try:
+
                 if int(book_id) in loaned_book_ids:
                     flash('This user is lending the same book right now.', 'danger')
+                elif int(book_id) in reserved_book_ids:
+                    flash('You already have a reservation for this book. Please accept the reservation to activate the loan', 'danger')
                 else:
                     cursor = connection.cursor()
                     cursor.callproc('physical_loan', [book_id, user_id])
@@ -1052,6 +1097,17 @@ def main_school_admin_library():
                         return redirect(url_for('main_school_admin_library'))
                     else:
                         flash('Cannot make this loan. Make sure this book is available and the user is eligible to loan another book', 'danger')
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+
+        elif action == 'refresh':
+            try:
+                cursor = connection.cursor()
+                cursor.callproc('check_overdue_reservations_and_loans')
+                cursor.close()
+                flash('Refresh completed.', 'success')
+                return redirect(url_for('main_school_admin_library'))
+
             except mysql.connector.Error as error:
                 return f"Database Error: {error}"
 
@@ -1170,6 +1226,7 @@ def main_school_admin_reviews():
         return render_template("main_school_admin_reviews.html", reviews=reviews, category_averages=category_averages, user_averages=user_averages)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
+
 
 @app.route("/main/school_admin/queries", methods=["GET", "POST"])
 def main_school_admin_queries():
@@ -1407,20 +1464,6 @@ def main_users_personal_info():
     user_id = session["user"][0]
     user_type = session["user"][10]
 
-    if user_type not in ["teacher", "admin", "school_admin"]:
-        try:
-            cursor = connection.cursor()
-            cursor.execute(
-                "SELECT * FROM users WHERE user_id = %s",
-            (user_id,)
-            )
-            user_info = cursor.fetchone()
-            cursor.close()
-        except mysql.connector.Error as error:
-            return f"Database Error: {error}"
-
-        return render_template("main_users_personal_info.html", user_info=user_info)
-
     if request.method == "POST":
         # Handle form submission
         username = request.form.get("username")
@@ -1428,21 +1471,37 @@ def main_users_personal_info():
         first_name = request.form.get("first_name")
         last_name = request.form.get("last_name")
         email = request.form.get("email")
+        if user_type not in ["teacher", "admin", "school admin"]:
+            try:
+                cursor = connection.cursor()
+                cursor.execute(
+                    "UPDATE users SET passwrd = %s WHERE user_id = %s",
+                    (password, user_id)
+                )
+                connection.commit()
+                cursor.close()
 
-        # Update the user's personal information
-        try:
-            cursor = connection.cursor()
-            cursor.execute(
-                "UPDATE users SET username = %s, passwrd = %s, first_name = %s, last_name = %s, email = %s WHERE user_id = %s",
-                (username, password, first_name, last_name, email, user_id)
-            )
-            connection.commit()
-            cursor.close()
+                flash("Password updated.", "success")
+                return redirect(url_for("main_users_personal_info"))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
 
-            flash("Personal information updated.", "success")
-            return redirect(url_for("main_users_personal_info"))
-        except mysql.connector.Error as error:
-            return f"Database Error: {error}"
+            return render_template("main_users_personal_info.html", user_info=user_info)
+        else:
+            # Update the user's personal information
+            try:
+                cursor = connection.cursor()
+                cursor.execute(
+                    "UPDATE users SET username = %s, passwrd = %s, first_name = %s, last_name = %s, email = %s WHERE user_id = %s",
+                    (username, password, first_name, last_name, email, user_id)
+                )
+                connection.commit()
+                cursor.close()
+
+                flash("Personal information updated.", "success")
+                return redirect(url_for("main_users_personal_info"))
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
 
     try:
         cursor = connection.cursor()
@@ -1456,7 +1515,6 @@ def main_users_personal_info():
         return render_template("main_users_personal_info.html", user_info=user_info)
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
-
 
 @app.route("/main/users/queries")
 def main_users_queries():
