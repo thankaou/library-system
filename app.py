@@ -409,8 +409,8 @@ def query_3_1_6():
                 join book b on bl.book_id = b.book_id
                 join category_books cb1 on b.book_id = cb1.book_id
                 join category_books cb2 on b.book_id = cb2.book_id
-                join category c1 use index (index_category_name) on cb1.category_id = c1.category_id
-                join category c2 use index (index_category_name) on cb2.category_id = c2.category_id
+                join category c1  on cb1.category_id = c1.category_id
+                join category c2  on cb2.category_id = c2.category_id
                 where c1.category_name < c2.category_name /*distinct pairs*/
                 group by c1.category_name, c2.category_name
                 order by loan_count desc
