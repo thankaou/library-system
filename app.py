@@ -315,41 +315,50 @@ def query_3_1_4():
     except mysql.connector.Error as error:
         return f"Database Error: {error}"
 
-
 @app.route("/main/admin/query_3_1_5", methods=["GET", "POST"])
 def query_3_1_5():
     # Code for the "School admin pairs with same # of loans made (20+ loans)" query goes here
     # Code for the "Authors without a lent book" query goes here
-    try:
-        cursor = connection.cursor()
-        query = """
-            select distinct a1.school_admin, a1.loan_count
-            from (
-                select a.school_admin, count(*) as loan_count
-                from school as a
-                inner join book_loan as b on a.school_id = b.school_id
-                where year(b.starting_date) = year(now())
-                group by a.school_admin
-                having loan_count > 20
-            ) as a1
-            inner join (
-                select c.school_admin, count(*) as loan_count
-                from school as c
-                inner join book_loan as d on c.school_id = d.school_id
-                where year(d.starting_date) = year(now())
-                group by c.school_admin
-                having loan_count > 20
-            ) as a2 on a1.loan_count = a2.loan_count;
+    if(request.method == "POST"):
+            try:
+                year = request.form.get('year')
+                print(year)
+    
+                cursor = connection.cursor()
+                query = """
+                    select distinct a1.school_admin, a1.loan_count
+                    from (
+                        select a.school_admin, count(*) as loan_count
+                        from school as a
+                        inner join book_loan as b on a.school_id = b.school_id
+                        where year(b.starting_date) = %s
+                        group by a.school_admin
+                        having loan_count > 20
+                    ) as a1
+                    inner join (
+                        select c.school_admin, count(*) as loan_count
+                        from school as c
+                        inner join book_loan as d on c.school_id = d.school_id
+                        where year(d.starting_date) = %s
+                        group by c.school_admin
+                        having loan_count > 20
+                    ) as a2 on a1.loan_count = a2.loan_count;
 
-        """
-        cursor.execute(query)
-        hyperactive_operators = cursor.fetchall()
-        connection.commit()
-        cursor.close()
-        return render_template("hyperactive_operators.html", hyperactive_operators=hyperactive_operators)
-    except mysql.connector.Error as error:
-        return f"Database Error: {error}"
-
+                """
+                values = (year,year,)
+                cursor.execute(query,values)
+                hyperactive_operators = cursor.fetchall()
+                connection.commit()
+                cursor.close()
+                return render_template("hyperactive_operators.html", hyperactive_operators=hyperactive_operators)
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
+    else:
+            try:
+                
+                return render_template("choose_year_for_20.html")
+            except mysql.connector.Error as error:
+                return f"Database Error: {error}"
 
 @app.route("/main/admin/query_3_1_6", methods=["GET", "POST"])
 def query_3_1_6():
