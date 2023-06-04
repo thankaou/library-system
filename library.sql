@@ -136,7 +136,8 @@ primary key(reservation_ID),
 constraint fk_reservation_users foreign key (user_id) 
 	references users(user_id) on delete cascade on update cascade,
 constraint fk_reservation_school_library  foreign key (school_id,book_id) 
-	references school_library(school_id,book_id) on delete cascade on update cascade
+	references school_library(school_id,book_id) on delete cascade on update cascade,
+constraint valid_reservation_dates check( reservation_date < end_of_reservation_date)
 
 );
 
@@ -154,7 +155,8 @@ primary key(loan_ID),
 constraint fk_book_loan_users foreign key (user_id) 
 	references users(user_id) on delete cascade on update cascade,
 constraint fk_book_loan_school_library foreign key (school_id ,book_id) 
-	references school_library(school_id,book_id ) on delete cascade on update cascade
+	references school_library(school_id,book_id ) on delete cascade on update cascade,
+constraint valid_dates check( starting_date < end_date)
 
 );
 
