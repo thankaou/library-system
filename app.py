@@ -264,7 +264,7 @@ def query_3_1_2():
 
             query2 = """
                 select a.user_id, a.first_name , a.last_name, count(*) as number_of_loans
-                from users a
+                from users a use index (index_user_type)
                 inner join book_loan b on a.user_id=b.user_id
                 inner join book c on b.book_id = c.book_id
                 inner join category_books d on d.book_id = b.book_id
@@ -312,7 +312,7 @@ def query_3_1_3():
         cursor = connection.cursor()
         query = """
             select a.user_id,a.first_name, a.last_name, count(*) as loan_number
-            from users a
+            from users a use index (index_user_type)
             inner join book_loan b on a.user_id = b.user_id 
             where a.user_type = 'teacher'
             and  (date_format(from_days(datediff(now(),a.date_of_birth)), '%Y')  + 0 ) < 40
@@ -405,12 +405,12 @@ def query_3_1_6():
         cursor = connection.cursor()
         query = """
                 select distinct c1.category_name, c2.category_name, count(*) as loan_count
-                from book_loan bl
+                from book_loan bl 
                 join book b on bl.book_id = b.book_id
                 join category_books cb1 on b.book_id = cb1.book_id
                 join category_books cb2 on b.book_id = cb2.book_id
-                join category c1 on cb1.category_id = c1.category_id
-                join category c2 on cb2.category_id = c2.category_id
+                join category c1 use index (index_category_name) on cb1.category_id = c1.category_id
+                join category c2 use index (index_category_name) on cb2.category_id = c2.category_id
                 where c1.category_name < c2.category_name /*distinct pairs*/
                 group by c1.category_name, c2.category_name
                 order by loan_count desc
@@ -1267,7 +1267,7 @@ def main_school_admin_queries():
                     INNER JOIN (
                         SELECT d.book_id, GROUP_CONCAT(e.author_name SEPARATOR ', ') AS author_names
                         FROM author_books d
-                        INNER JOIN author e ON e.author_ID = d.author_ID
+                        INNER JOIN author e use index (index_author_name) ON e.author_ID = d.author_ID
                         GROUP BY d.book_id
                     ) AS authors ON authors.book_id = sl.book_id
                     WHERE c.category_ID LIKE %s
