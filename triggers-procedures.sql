@@ -1,4 +1,4 @@
-/*SOSOSOSOSOSOSOS να εξασφαλισω οτι οι δανεισμοι και reservations(ή και ολλα περαν του update) ΓΙΝΟΝΤΑΙ ΣΕ ΕΠΙΠΕΔΟ ΣΧΟΛΕΙΟΥ*/
+
 use library_system_final;
 
 delimiter //
